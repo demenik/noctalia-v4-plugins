@@ -1,7 +1,7 @@
 {
   "id": "git-companion",
   "name": "Git Companion",
-  "version": "1.2.4",
+  "version": "1.0.0",
   "minNoctaliaVersion": "4.6.6",
   "author": "Thomas Philippo",
   "license": "MIT",
