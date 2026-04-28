@@ -18,19 +18,12 @@
     "applyAllDisplays": "Применить ко всем дисплеям",
     "applySingleDisplay": "Применить к {screen}",
     "approvedBadge": "Рекомендовано",
-    "cancel": "Отмена",
     "clampBorder": "Граница",
     "clampClamp": "Зажатие",
     "clampRepeat": "Повтор",
-    "closePanel": "Закрыть панель",
     "closeSidebar": "Закрыть боковую панель",
     "compatibilityQuickCheck": "Быстрая проверка совместимости",
-    "compatibilityQuickCheckConfirm": "Просканировать все обои на совместимость дополнительных свойств? Это может занять некоторое время.",
     "compatibilityQuickCheckFinished": "Проверено обоев: {total}, могут работать некорректно: {failed}, ограниченная поддержка: {limited}",
-    "compatibilityQuickCheckRunning": "Проверка совместимости обоев...",
-    "confirm": "Подтвердить",
-    "confirmApply": "Применить обои",
-    "count": "Количество обоев: {count}",
     "dynamicBadge": "Динамические",
     "emptyAll": "В исходном каталоге не найдено ни одних обоев",
     "emptyFiltered": "Не найдено обоев, соответствующих текущим фильтрам",
@@ -84,7 +77,6 @@
     "sectionAudio": "Отображение и аудио",
     "sectionFeatures": "Функции",
     "sectionProperties": "Дополнительные свойства",
-    "sortAscendingToggle": "Переключить возр./убыв.",
     "sortAscendingToggleWithDirection": "{direction} переключить возр./убыв.",
     "sortButtonSummary": "Сортировка · {direction} {sort}",
     "sortDateAdded": "Дата добавления",
@@ -132,7 +124,6 @@
       "interfaceTitle": "Интерфейс",
       "performanceTitle": "Производительность"
     },
-    "interfaceIntro": "Настройте внешний вид панели и расположение значков на карточках обоев.",
     "resourcesIntro": "Управляйте сканированием источника обоев и кэшированными изображениями для извлечения цветов.",
     "defaultAudioReactiveEffects": {
       "description": "По умолчанию сохранять обработку аудио для обоев, поддерживающих эту функцию",
@@ -152,8 +143,7 @@
     },
     "defaultFps": {
       "description": "Ограничение частоты кадров для обоев по умолчанию",
-      "label": "FPS по умолчанию",
-      "placeholder": "30"
+      "label": "FPS по умолчанию"
     },
     "defaultFullscreenPauseOnlyActive": {
       "description": "(Только Wayland) Приостанавливать только когда активно полноэкранное окно",
@@ -206,28 +196,14 @@
       "description": "Цвет значка виджета на панели",
       "label": "Цвет значка"
     },
-    "panelPageSize": {
-      "description": "Сколько обоев показывать в сетке на одной странице",
-      "label": "Обоев на страницу"
-    },
     "units": {
       "fps": " FPS",
       "minutes": " мин",
-      "percent": " %",
-      "seconds": " с"
+      "percent": " %"
     },
     "wallpaperScanCacheMinutes": {
       "description": "При открытии панели повторно использовать кэшированный список обоев, если он не старше указанного количества минут",
       "label": "Время кэша сканирования обоев"
-    },
-    "wallpaperScanMode": {
-      "label": "Режим сканирования обоев",
-      "description": "Выберите, сколько метаданных читать при построении списка обоев.",
-      "options": {
-        "fast": "Быстро",
-        "stable": "Стабильно",
-        "full": "Полно"
-      }
     },
     "wallpapersFolder": {
       "description": "Каталог, содержащий папки проектов обоев",

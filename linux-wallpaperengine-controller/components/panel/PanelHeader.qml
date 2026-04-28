@@ -202,7 +202,8 @@ Rectangle {
           }
 
           NIconButton {
-            visible: (mainInstance?.engineAvailable ?? false) && !root.scanningCompatibility
+            visible: (mainInstance?.engineAvailable ?? false)
+            enabled: !root.scanningCompatibility
             icon: "shield-search"
             colorFg: Color.mOnSurface
             tooltipText: pluginApi?.tr("panel.compatibilityQuickCheck")

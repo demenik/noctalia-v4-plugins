@@ -18,19 +18,12 @@
     "applyAllDisplays": "すべてのディスプレイに適用",
     "applySingleDisplay": "{screen} に適用",
     "approvedBadge": "おすすめ",
-    "cancel": "キャンセル",
     "clampBorder": "境界",
     "clampClamp": "クランプ",
     "clampRepeat": "繰り返し",
-    "closePanel": "パネルを閉じる",
     "closeSidebar": "サイドバーを閉じる",
     "compatibilityQuickCheck": "互換性クイックチェック",
-    "compatibilityQuickCheckConfirm": "すべての壁紙の追加プロパティ互換性をスキャンしますか？ 少し時間がかかる場合があります。",
     "compatibilityQuickCheckFinished": "{total} 件の壁紙をスキャンし、{failed} 件が要注意、{limited} 件が制限付きです",
-    "compatibilityQuickCheckRunning": "壁紙の互換性を確認中...",
-    "confirm": "確認",
-    "confirmApply": "壁紙を適用",
-    "count": "壁紙数: {count}",
     "dynamicBadge": "動的",
     "emptyAll": "ソースディレクトリに壁紙が見つかりません",
     "emptyFiltered": "条件に一致する壁紙が見つかりません",
@@ -84,7 +77,6 @@
     "sectionAudio": "ディスプレイとオーディオ",
     "sectionFeatures": "機能",
     "sectionProperties": "追加プロパティ",
-    "sortAscendingToggle": "昇順/降順を切替",
     "sortAscendingToggleWithDirection": "{direction} 昇順/降順を切替",
     "sortButtonSummary": "並び替え · {direction}{sort}",
     "sortDateAdded": "追加時間",
@@ -132,7 +124,6 @@
       "interfaceTitle": "インターフェース",
       "performanceTitle": "パフォーマンス"
     },
-    "interfaceIntro": "パネルの表示と、壁紙カードで使う Badge レイアウトを設定します。",
     "resourcesIntro": "壁紙ソースのスキャンと、色抽出に使うキャッシュ画像を管理します。",
     "defaultAudioReactiveEffects": {
       "description": "該機能をサポートする壁紙の既定でオーディオ処理を有効にしたままにします",
@@ -152,8 +143,7 @@
     },
     "defaultFps": {
       "description": "壁紙で使う既定のフレームレート上限",
-      "label": "既定 FPS",
-      "placeholder": "30"
+      "label": "既定 FPS"
     },
     "defaultFullscreenPauseOnlyActive": {
       "description": "（Wayland のみ）フルスクリーンウィンドウがアクティブなときのみ一時停止",
@@ -206,28 +196,14 @@
       "description": "バーウィジェットのアイコンに使う色",
       "label": "アイコンの色"
     },
-    "panelPageSize": {
-      "description": "グリッドの各ページに表示する壁紙数を設定します",
-      "label": "1ページあたりの壁紙数"
-    },
     "units": {
       "fps": " FPS",
       "minutes": " 分",
-      "percent": " %",
-      "seconds": " 秒"
+      "percent": " %"
     },
     "wallpaperScanCacheMinutes": {
       "description": "パネルを開くとき、この分数を超えていなければキャッシュ済みの壁紙一覧を再利用します",
       "label": "壁紙スキャンキャッシュ時間"
-    },
-    "wallpaperScanMode": {
-      "label": "壁紙スキャン方式",
-      "description": "壁紙一覧を作るときにどこまで情報を読むか選べます。",
-      "options": {
-        "fast": "高速",
-        "stable": "安定",
-        "full": "完全"
-      }
     },
     "wallpapersFolder": {
       "description": "壁纸プロジェクトフォルダーを含むディレクトリ",

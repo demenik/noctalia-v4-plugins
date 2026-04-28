@@ -18,19 +18,12 @@
     "applyAllDisplays": "套用到全部顯示器",
     "applySingleDisplay": "套用到 {screen}",
     "approvedBadge": "推薦",
-    "cancel": "取消",
     "clampBorder": "邊框",
     "clampClamp": "鉗制",
     "clampRepeat": "重複",
-    "closePanel": "關閉面板",
     "closeSidebar": "關閉側欄",
     "compatibilityQuickCheck": "相容性快速檢查",
-    "compatibilityQuickCheckConfirm": "是否掃描全部壁紙的額外屬性相容性？這可能需要一些時間。",
     "compatibilityQuickCheckFinished": "共掃描 {total} 個壁紙，其中 {failed} 個可能異常，{limited} 個支援受限",
-    "compatibilityQuickCheckRunning": "正在檢查壁紙相容性...",
-    "confirm": "確認",
-    "confirmApply": "套用壁紙",
-    "count": "壁紙數量：{count}",
     "dynamicBadge": "動態",
     "emptyAll": "來源目錄中找不到任何壁紙",
     "emptyFiltered": "來源目錄中找不到符合條件的壁紙",
@@ -84,7 +77,6 @@
     "sectionAudio": "顯示與音訊",
     "sectionFeatures": "功能",
     "sectionProperties": "額外屬性",
-    "sortAscendingToggle": "切換升/降序",
     "sortAscendingToggleWithDirection": "{direction} 切換升/降序",
     "sortButtonSummary": "排序 · {direction}{sort}",
     "sortDateAdded": "加入時間",
@@ -132,7 +124,6 @@
       "interfaceTitle": "介面",
       "performanceTitle": "效能"
     },
-    "interfaceIntro": "設定面板顯示方式，以及壁紙卡片所使用的 Badge 版面。",
     "resourcesIntro": "管理壁紙來源掃描，以及用於取色的快取圖片。",
     "defaultAudioReactiveEffects": {
       "description": "支援該功能的壁纸預設保持音訊處理啟用狀態",
@@ -152,8 +143,7 @@
     },
     "defaultFps": {
       "description": "壁紙預設使用的幀率上限",
-      "label": "預設 FPS",
-      "placeholder": "30"
+      "label": "預設 FPS"
     },
     "defaultFullscreenPauseOnlyActive": {
       "description": "（僅限 Wayland）僅在全螢幕視窗為作用中時暫停",
@@ -206,28 +196,14 @@
       "description": "用於欄元件圖示的顏色",
       "label": "圖示顏色"
     },
-    "panelPageSize": {
-      "description": "設定壁紙網格每一頁顯示的壁紙數量",
-      "label": "每頁壁紙數量"
-    },
     "units": {
       "fps": " FPS",
       "minutes": " 分鐘",
-      "percent": " %",
-      "seconds": " 秒"
+      "percent": " %"
     },
     "wallpaperScanCacheMinutes": {
       "description": "開啟面板時，若未超過該分鐘數則重用快取的壁紙列表而不重新掃描",
       "label": "壁紙掃描快取時長"
-    },
-    "wallpaperScanMode": {
-      "label": "壁紙掃描模式",
-      "description": "選擇建立壁紙列表時要讀取多少中繼資料。",
-      "options": {
-        "fast": "快速",
-        "stable": "穩定",
-        "full": "完整"
-      }
     },
     "wallpapersFolder": {
       "description": "包含壁纸项目文件夹的目录",
