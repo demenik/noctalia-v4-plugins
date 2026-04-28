@@ -55,6 +55,10 @@ Item {
   // Initialization.
   Component.onCompleted: {
     Logger.i("LWEController", "Main initialized");
+
+    // Clean up leftover processes from previous sessions.
+    startupCleanupProcess.running = true;
+
     lastScreenSetSignature = currentScreenSetSignature();
     startupWallpaperColorResyncTimer.restart();
   }
@@ -1181,6 +1185,25 @@ Item {
     }
   }
 
+  // Startup cleanup: kill any orphaned wallpaper engine processes from previous sessions.
+  Process {
+    id: startupCleanupProcess
+    running: false
+
+    command: {
+      const pluginDir = root.pluginApi?.pluginDir || "";
+      const scriptPath = pluginDir + "/scripts/force-stop-engine.sh";
+      return ["bash", scriptPath];
+    }
+
+    onExited: function (exitCode) {
+      Logger.d("LWEController", "Startup cleanup finished", "exitCode=", exitCode);
+    }
+
+    stdout: StdioCollector {}
+    stderr: StdioCollector {}
+  }
+
   Process {
     id: reusedWallpaperColorCheckProcess
     running: false
@@ -1375,5 +1398,40 @@ Item {
       Logger.i("LWEController", "Reapplying wallpapers after screen topology change");
       root.restartEngine();
     }
+  }
+
+  // Cleanup on shell shutdown.
+  Component.onDestruction: {
+    Logger.i("LWEController", "Shell shutting down, cleaning up wallpaper engine processes");
+
+    pendingCommand = [];
+    stopRequested = true;
+
+    if (engineProcess.running)
+      engineProcess.running = false;
+
+    if (wallpaperScanProcess.running)
+      wallpaperScanProcess.running = false;
+    if (wallpaperColorProcess.running)
+      wallpaperColorProcess.running = false;
+    if (reusedWallpaperColorCheckProcess.running)
+      reusedWallpaperColorCheckProcess.running = false;
+    if (cachedWallpaperColorSyncCheckProcess.running)
+      cachedWallpaperColorSyncCheckProcess.running = false;
+
+    if (!forceStopProcess.running)
+      forceStopProcess.running = true;
+
+    stableRunTimer.stop();
+    screenTopologyRestartDebounce.stop();
+    wallpaperColorStartTimer.stop();
+    cachedWallpaperColorSyncTimer.stop();
+    startupWallpaperColorResyncTimer.stop();
+
+    isApplying = false;
+    scanningWallpapers = false;
+    applyingWallpaperColors = false;
+
+    Logger.i("LWEController", "Cleanup complete");
   }
 }
