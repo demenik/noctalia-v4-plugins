@@ -511,7 +511,7 @@ ColumnLayout {
       border.color: Qt.alpha(Color.mOutline, 0.22)
       clip: true
 
-      Text {
+      NText {
         id: descriptionMeasureText
         visible: false
         width: descriptionText.width
@@ -522,7 +522,7 @@ ColumnLayout {
         onContentHeightChanged: descriptionCollapseEvalTimer.restart()
       }
 
-      Text {
+      NText {
         id: descriptionText
         anchors.fill: parent
         anchors.margins: Style.marginS
