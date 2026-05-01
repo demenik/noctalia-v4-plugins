@@ -151,7 +151,10 @@ NIconButton {
 
     var tooltip = "Habitica - " + (main?.displayName() || pluginApi?.tr("tooltip.player"))
     tooltip += "\n" + (main?.levelText() || pluginApi?.tr("tooltip.levelFallback"))
-    tooltip += "\n" + (main?.hpText() || pluginApi?.tr("tooltip.hpFallback")) + " - " + (main?.xpText() || pluginApi?.tr("tooltip.xpFallback")) + " - " + (main?.goldText() || pluginApi?.tr("tooltip.goldFallback"))
+    var hpFallback = pluginApi?.tr("tooltip.hpFallback")
+    var xpFallback = pluginApi?.tr("tooltip.xpFallback")
+    var goldFallback = pluginApi?.tr("tooltip.goldFallback")
+    tooltip += "\n" + (main?.hpText() || hpFallback) + " - " + (main?.xpText() || xpFallback) + " - " + (main?.goldText() || goldFallback)
     tooltip += "\n" + (main?.dueDailiesCount || 0) + pluginApi?.tr("tooltip.dailies") + (main?.dueTodosCount || 0) + pluginApi?.tr("tooltip.todos")
 
     if (main?.lastFetchTimestamp) {
