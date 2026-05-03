@@ -29,12 +29,5 @@
       "toggle_display": "Middle click: toggle display"
     },
     "plugin_settings": "Plugin settings"
-  },
-  "panel": {
-    "keyboard_layout": "Keyboard layout",
-    "display_text": "Display: text",
-    "display_flag": "Display: flag",
-    "middle_previous": "Middle click: previous layout",
-    "middle_toggle": "Middle click: toggle display"
   }
 }
