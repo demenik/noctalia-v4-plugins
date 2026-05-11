@@ -36,25 +36,6 @@
       "lastUpdated": "2026-04-13T17:44:48+02:00"
     },
     {
-      "id": "agent-session-status",
-      "name": "Agent Session Status",
-      "version": "1.0.0",
-      "official": false,
-      "author": "nzlov",
-      "description": "Runs a local MCP HTTP service for agents to report session status and shows active sessions in the bar.",
-      "repository": "https://github.com/noctalia-dev/noctalia-plugins",
-      "minNoctaliaVersion": "4.6.6",
-      "license": "MIT",
-      "tags": [
-        "Bar",
-        "Panel",
-        "Development",
-        "Indicator",
-        "AI"
-      ],
-      "lastUpdated": "2026-05-11T00:00:00+08:00"
-    },
-    {
       "id": "arch-updater",
       "name": "Arch Updater",
       "version": "2.1.5",
