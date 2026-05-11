@@ -58,10 +58,15 @@ class SessionStore:
         return dict(entry)
 
     def snapshot(self):
+        return self.snapshot_for_agent()
+
+    def snapshot_for_agent(self, agent=None):
         grouped = {}
         running_count = 0
 
         for entry in self._sessions.values():
+            if agent is not None and entry["agent"] != agent:
+                continue
             if entry["status"] == "running":
                 running_count += 1
             grouped.setdefault(entry["agent"], []).append(dict(entry))
@@ -163,7 +168,7 @@ def _session_tools():
         {
             "name": "list_sessions",
             "title": "List reported agent sessions",
-            "description": "Return the current in-memory session snapshot grouped by X-Agent.",
+            "description": "Return only the current X-Agent's in-memory session snapshot. Requires Authorization bearer token and X-Agent headers.",
             "inputSchema": {
                 "type": "object",
                 "properties": {},
@@ -232,7 +237,14 @@ def _handle_mcp(store, token, headers, raw_body):
         arguments = params.get("arguments") or {}
 
         if name == "list_sessions":
-            return _rpc_result(request_id, _text_tool_result(store.snapshot()))
+            if not _authorized(headers, token):
+                return _rpc_error(request_id, -32001, "Unauthorized")
+
+            agent = headers.get("X-Agent", "").strip()
+            if not agent:
+                return _rpc_error(request_id, -32602, "X-Agent header is required")
+
+            return _rpc_result(request_id, _text_tool_result(store.snapshot_for_agent(agent)))
 
         if name == "report_session":
             if not _authorized(headers, token):
@@ -249,7 +261,7 @@ def _handle_mcp(store, token, headers, raw_body):
 
             return _rpc_result(request_id, _text_tool_result({
                 "session": session,
-                "snapshot": store.snapshot(),
+                "snapshot": store.snapshot_for_agent(agent),
             }))
 
         return _rpc_error(request_id, -32602, "Unknown tool: " + str(name))

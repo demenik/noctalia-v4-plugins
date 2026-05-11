@@ -165,12 +165,65 @@ class McpRequestTest(unittest.TestCase):
                 "name": "list_sessions",
                 "arguments": {},
             },
-        })
+        }, {"Authorization": "Bearer secret", "X-Agent": "codex"})
 
         self.assertEqual(status, 200)
         payload = json.loads(body["result"]["content"][0]["text"])
         self.assertEqual(payload["runningCount"], 1)
         self.assertEqual(payload["agents"][0]["agent"], "codex")
+
+    def test_list_sessions_only_returns_calling_agent_sessions(self):
+        self.store.upsert("codex", {"id": "s1", "title": "Codex", "status": "running"})
+        self.store.upsert("claude", {"id": "s2", "title": "Claude", "status": "running"})
+
+        status, _, body = self.request({
+            "jsonrpc": "2.0",
+            "id": 9,
+            "method": "tools/call",
+            "params": {
+                "name": "list_sessions",
+                "arguments": {},
+            },
+        }, {"Authorization": "Bearer secret", "X-Agent": "codex"})
+
+        self.assertEqual(status, 200)
+        payload = json.loads(body["result"]["content"][0]["text"])
+        self.assertEqual(payload["runningCount"], 1)
+        self.assertEqual([agent["agent"] for agent in payload["agents"]], ["codex"])
+
+    def test_list_sessions_requires_authorization(self):
+        self.store.upsert("codex", {"id": "s1", "title": "Codex", "status": "running"})
+
+        status, _, body = self.request({
+            "jsonrpc": "2.0",
+            "id": 10,
+            "method": "tools/call",
+            "params": {
+                "name": "list_sessions",
+                "arguments": {},
+            },
+        }, {"X-Agent": "codex"})
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["error"]["code"], -32001)
+
+    def test_report_session_response_only_returns_calling_agent_snapshot(self):
+        self.store.upsert("claude", {"id": "s2", "title": "Claude", "status": "running"})
+
+        status, _, body = self.request({
+            "jsonrpc": "2.0",
+            "id": 11,
+            "method": "tools/call",
+            "params": {
+                "name": "report_session",
+                "arguments": {"id": "s1", "title": "Codex", "status": "running"},
+            },
+        }, {"Authorization": "Bearer secret", "X-Agent": "codex"})
+
+        self.assertEqual(status, 200)
+        payload = json.loads(body["result"]["content"][0]["text"])
+        self.assertEqual(payload["snapshot"]["runningCount"], 1)
+        self.assertEqual([agent["agent"] for agent in payload["snapshot"]["agents"]], ["codex"])
 
     def test_get_mcp_returns_405_when_sse_not_supported(self):
         status, _, body = server.handle_request(self.store, "secret", "GET", "/mcp", {}, b"")
