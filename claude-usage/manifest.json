@@ -1,0 +1,26 @@
+{
+  "id": "claude-usage",
+  "name": "Claude Code Usage",
+  "version": "1.0.0",
+  "minNoctaliaVersion": "3.6.0",
+  "author": "blessonmathewsam",
+  "license": "MIT",
+  "repository": "https://github.com/noctalia-dev/noctalia-plugins",
+  "description": "Shows Claude Code session usage limits and API cost in the bar, with live progress bars for session and weekly limits from the Anthropic OAuth API. Requires Claude Code CLI installed and authenticated, and python3 in PATH.",
+  "tags": ["Bar", "Development", "AI"],
+  "entryPoints": {
+    "main": "Main.qml",
+    "barWidget": "BarWidget.qml",
+    "panel": "Panel.qml"
+  },
+  "dependencies": {
+    "plugins": []
+  },
+  "metadata": {
+    "displayMode": "alwaysShow",
+    "defaultSettings": {
+      "displayMode": "alwaysShow",
+      "pollInterval": 60000
+    }
+  }
+}
