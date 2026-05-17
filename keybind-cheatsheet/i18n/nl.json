@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWC wordt niet ondersteund",
     "labwc-detail": "LabWC gebruikt XML-configuratieformaat dat incompatibel is met deze plugin",
     "unknown-compositor": "Onbekende compositor gedetecteerd",
-    "unknown-detail": "Deze plugin ondersteunt alleen Hyprland- en Niri-compositors"
+    "unknown-detail": "Deze plugin ondersteunt alleen Hyprland- en Niri-compositors",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "Laden...",
@@ -20,7 +21,14 @@
     "workspace-moving": "WERKRUIMTEN - VERPLAATSEN",
     "workspace-mouse": "WERKRUIMTEN - MUIS",
     "search-placeholder": "Zoek sneltoetsen...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "Sneltoetsen Overzicht Instellingen",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "auto",
     "color-paste-hint": "Tip: kopieer een hex-kleur (bijv. #FF6B6B) naar het klembord en er verschijnt een plak-icoon in de pil.",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "Sneltoetsen Spiekbriefje",

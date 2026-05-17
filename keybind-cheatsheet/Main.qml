@@ -86,11 +86,15 @@ Item {
     if (hyprReadProcess.running) hyprReadProcess.running = false;
     if (mangoGlobProcess.running) mangoGlobProcess.running = false;
     if (mangoReadProcess.running) mangoReadProcess.running = false;
+    if (hyprDetectProcess.running) hyprDetectProcess.running = false;
+    if (hyprLuaReadProcess.running) hyprLuaReadProcess.running = false;
+    if (hyprctlBindsProcess.running) hyprctlBindsProcess.running = false;
 
     // Clear process buffers
     niriGlobProcess.expandedFiles = [];
     hyprGlobProcess.expandedFiles = [];
     mangoGlobProcess.expandedFiles = [];
+    hyprctlChunks = [];
     currentLines = [];
   }
 
@@ -101,6 +105,10 @@ Item {
     currentLines = [];
     collectedBinds = {};
     parseDepthCounter = 0;
+    luaCategoryHeaders = [];
+    descToCategory = ({});
+    prefixToCategory = [];
+    hyprctlChunks = [];
     if (mangoGlobProcess.running) mangoGlobProcess.running = false;
     if (mangoReadProcess.running) mangoReadProcess.running = false;
     mangoGlobProcess.expandedFiles = [];
@@ -177,8 +185,23 @@ Item {
 
     var filePath;
     if (CompositorService.isHyprland) {
-      filePath = pluginApi?.pluginSettings?.hyprlandConfigPath || (homeDir + "/.config/hypr/hyprland.conf");
-    } else if (CompositorService.isNiri) {
+      hyprConfPath = (pluginApi?.pluginSettings?.hyprlandConfigPath || (homeDir + "/.config/hypr/hyprland.conf")).replace(/^~/, homeDir);
+      hyprLuaPath = (pluginApi?.pluginSettings?.hyprlandLuaConfigPath || (homeDir + "/.config/hypr/hyprland.lua")).replace(/^~/, homeDir);
+
+      var mode = pluginApi?.pluginSettings?.hyprlandParserMode || "auto";
+      if (mode === "conf") {
+        startHyprlandConfTor();
+      } else if (mode === "lua") {
+        startHyprlandLuaTor();
+      } else {
+        // auto: prefer lua if hyprland.lua exists, else fall back to .conf
+        hyprDetectProcess.command = ["sh", "-c", '[ -f "$1" ] && echo lua || echo conf', "sh", hyprLuaPath];
+        hyprDetectProcess.running = true;
+      }
+      return;
+    }
+
+    if (CompositorService.isNiri) {
       filePath = pluginApi?.pluginSettings?.niriConfigPath || (homeDir + "/.config/niri/config.kdl");
     } else if (CompositorService.isMango) {
       filePath = pluginApi?.pluginSettings?.mangoConfigPath || (homeDir + "/.config/mango/config.conf");
@@ -187,9 +210,7 @@ Item {
     filePath = filePath.replace(/^~/, homeDir);
     filesToParse = [filePath];
 
-    if (CompositorService.isHyprland) {
-      parseNextHyprlandFile();
-    } else if (CompositorService.isNiri) {
+    if (CompositorService.isNiri) {
       parseNextNiriFile();
     } else if (CompositorService.isMango) {
       parseNextMangoFile();
@@ -630,6 +651,268 @@ Item {
       }
     }
     return result;
+  }
+
+  // ========== HYPRLAND TOR SELECTION ==========
+  property string hyprConfPath: ""
+  property string hyprLuaPath: ""
+
+  Process {
+    id: hyprDetectProcess
+    running: false
+    property string result: ""
+    stdout: SplitParser {
+      onRead: data => { hyprDetectProcess.result = data.trim(); }
+    }
+    onExited: {
+      if (result === "lua") {
+        root.startHyprlandLuaTor();
+      } else {
+        root.startHyprlandConfTor();
+      }
+    }
+  }
+
+  function startHyprlandConfTor() {
+    filesToParse = [hyprConfPath];
+    parseNextHyprlandFile();
+  }
+
+  function startHyprlandLuaTor() {
+    // Read hyprland.lua + required modules to recover category headers,
+    // then query hyprctl for the authoritative (loop/require-expanded) binds.
+    luaCategoryHeaders = [];
+    descToCategory = ({});
+    prefixToCategory = [];
+    filesToParse = [hyprLuaPath];
+    parseNextHyprLuaFile();
+  }
+
+  // ========== HYPRLAND LUA TOR (hyprctl binds -j) ==========
+  property var luaCategoryHeaders: []   // ordered category titles from `-- N. NAME`
+  property var descToCategory: ({})     // exact description -> category
+  property var prefixToCategory: []     // [{prefix, category}] for loop-built binds
+  property var hyprctlChunks: []
+
+  function parseNextHyprLuaFile() {
+    if (parseDepthCounter >= maxParseDepth) {
+      runHyprctlBinds();
+      return;
+    }
+    parseDepthCounter++;
+
+    if (filesToParse.length === 0) {
+      runHyprctlBinds();
+      return;
+    }
+
+    var nextFile = filesToParse.shift();
+    if (parsedFiles[nextFile]) {
+      parseNextHyprLuaFile();
+      return;
+    }
+    parsedFiles[nextFile] = true;
+    currentLines = [];
+    hyprLuaReadProcess.currentFilePath = nextFile;
+    hyprLuaReadProcess.command = ["cat", nextFile];
+    hyprLuaReadProcess.running = true;
+  }
+
+  Process {
+    id: hyprLuaReadProcess
+    property string currentFilePath: ""
+    running: false
+
+    stdout: SplitParser {
+      onRead: data => {
+        if (root.currentLines.length < 10000) root.currentLines.push(data);
+      }
+    }
+
+    onExited: (exitCode, exitStatus) => {
+      if (exitCode === 0 && root.currentLines.length > 0) {
+        var currentCategory = null;
+        for (var i = 0; i < root.currentLines.length; i++) {
+          var line = root.currentLines[i];
+
+          // require("module") / require 'module' -> sibling <module>.lua
+          var reqMatch = line.match(/require\s*\(?\s*["']([^"']+)["']/);
+          if (reqMatch) {
+            var mod = reqMatch[1];
+            if (!mod.endsWith(".lua")) mod = mod + ".lua";
+            var resolved = root.resolveRelativePath(currentFilePath, mod);
+            if (!root.parsedFiles[resolved] && root.filesToParse.indexOf(resolved) === -1) {
+              root.filesToParse.push(resolved);
+            }
+          }
+
+          // Category header: -- 1. NAME
+          var headMatch = line.match(/^\s*--\s*\d+\.\s*(.+?)\s*$/);
+          if (headMatch) {
+            currentCategory = headMatch[1].trim();
+            if (root.luaCategoryHeaders.indexOf(currentCategory) === -1) {
+              root.luaCategoryHeaders.push(currentCategory);
+            }
+            continue;
+          }
+
+          // description = "..." / desc = '...'
+          var dMatch = line.match(/(?:description|desc)\s*=\s*["']([^"']*)["']/);
+          if (dMatch && currentCategory) {
+            var lit = dMatch[1];
+            if (line.indexOf("..") !== -1) {
+              // Concatenated/dynamic description (e.g. "Workspace " .. i)
+              var pfx = lit.trim();
+              if (pfx.length > 0) root.prefixToCategory.push({ prefix: pfx, category: currentCategory });
+            } else if (lit.length > 0 && root.descToCategory[lit] === undefined) {
+              root.descToCategory[lit] = currentCategory;
+            }
+          }
+        }
+      }
+      root.currentLines = [];
+      root.parseNextHyprLuaFile();
+    }
+  }
+
+  function runHyprctlBinds() {
+    hyprctlChunks = [];
+    hyprctlBindsProcess.command = ["hyprctl", "binds", "-j"];
+    hyprctlBindsProcess.running = true;
+  }
+
+  Process {
+    id: hyprctlBindsProcess
+    running: false
+
+    stdout: SplitParser {
+      onRead: data => {
+        if (root.hyprctlChunks.length < 20000) root.hyprctlChunks.push(data);
+      }
+    }
+
+    onExited: (exitCode, exitStatus) => {
+      if (exitCode !== 0 || root.hyprctlChunks.length === 0) {
+        Logger.e("keybind-cheatsheet", "hyprctl binds -j failed (exit " + exitCode + ")");
+        root.hyprctlChunks = [];
+        root.saveToDb([{
+          "title": root.pluginApi?.tr("error.unsupported-compositor"),
+          "binds": [{ "keys": "hyprctl", "desc": root.pluginApi?.tr("error.hyprctl-failed") }]
+        }]);
+        root.isCurrentlyParsing = false;
+        root.clearParsingData();
+        return;
+      }
+
+      var binds = [];
+      try {
+        binds = JSON.parse(root.hyprctlChunks.join("\n"));
+      } catch (e) {
+        Logger.e("keybind-cheatsheet", "hyprctl JSON parse failed: " + e);
+        binds = [];
+      }
+      root.hyprctlChunks = [];
+      root.buildCategoriesFromHyprctl(binds);
+    }
+  }
+
+  // Hyprland modifier bitmask (see HL_MODIFIER_*)
+  function decodeModmask(mask) {
+    var m = [];
+    if (mask & 64) m.push("Super");   // LOGO / SUPER / META
+    if (mask & 1)  m.push("Shift");
+    if (mask & 4)  m.push("Ctrl");
+    if (mask & 8)  m.push("Alt");
+    if (mask & 16) m.push("Mod2");
+    if (mask & 32) m.push("Mod3");
+    if (mask & 128) m.push("Mod5");
+    return m;
+  }
+
+  function computeBindId(b) {
+    // `arg` is an unstable lua registry ref for __lua binds — exclude it there.
+    var disp = (b.dispatcher === "__lua") ? "__lua" : (b.dispatcher + ":" + (b.arg || ""));
+    var flags = (b.release ? 1 : 0) + "" + (b.mouse ? 1 : 0) + (b.longPress ? 1 : 0);
+    return [b.submap || "", b.modmask, b.key, flags, disp].join("|");
+  }
+
+  function categoryForDesc(desc) {
+    if (descToCategory[desc] !== undefined) return descToCategory[desc];
+    for (var i = 0; i < prefixToCategory.length; i++) {
+      if (desc.indexOf(prefixToCategory[i].prefix) === 0) return prefixToCategory[i].category;
+    }
+    return null;
+  }
+
+  function buildCategoriesFromHyprctl(binds) {
+    var overrides = pluginApi?.pluginSettings?.bindOverrides || ({});
+    var showUndescribed = pluginApi?.pluginSettings?.showUndescribedBinds ?? true;
+
+    var byCat = ({});
+    var otherTitle = pluginApi?.tr("panel.other");
+    var undescTitle = pluginApi?.tr("panel.undescribed");
+
+    for (var i = 0; i < binds.length; i++) {
+      var b = binds[i];
+      if (!b || b.key === undefined) continue;
+
+      var bindId = computeBindId(b);
+      var ov = overrides[bindId];
+      if (ov && ov.hidden === true) continue;
+
+      var rawDesc = (b.has_description && b.description) ? b.description : "";
+      if (ov && ov.desc) rawDesc = ov.desc;
+      var undescribed = (rawDesc === "");
+
+      if (undescribed && !showUndescribed) continue;
+
+      var keyName = formatSpecialKey(b.key);
+      if (keyName === b.key) keyName = formatSpecialKey(String(b.key).toUpperCase());
+      var mods = decodeModmask(b.modmask);
+      var fullKey = mods.length > 0 ? (mods.join(" + ") + " + " + keyName) : keyName;
+
+      var cat;
+      if (undescribed) {
+        cat = undescTitle;
+      } else {
+        cat = categoryForDesc(rawDesc) || otherTitle;
+      }
+
+      if (!byCat[cat]) byCat[cat] = [];
+      byCat[cat].push({
+        "keys": fullKey,
+        "desc": undescribed ? "" : rawDesc,
+        "bindId": bindId,
+        "undescribed": undescribed
+      });
+    }
+
+    // Emit categories in lua header order, then Other, then Undescribed last.
+    var categories = [];
+    for (var h = 0; h < luaCategoryHeaders.length; h++) {
+      var t = luaCategoryHeaders[h];
+      if (byCat[t] && byCat[t].length > 0) {
+        categories.push({ "title": t, "binds": byCat[t] });
+        delete byCat[t];
+      }
+    }
+    if (byCat[otherTitle] && byCat[otherTitle].length > 0) {
+      categories.push({ "title": otherTitle, "binds": byCat[otherTitle] });
+      delete byCat[otherTitle];
+    }
+    var undesc = byCat[undescTitle];
+    if (undesc && undesc.length > 0) delete byCat[undescTitle];
+    // Any leftover categories (shouldn't normally happen)
+    for (var k in byCat) {
+      if (byCat[k] && byCat[k].length > 0) categories.push({ "title": k, "binds": byCat[k] });
+    }
+    if (undesc && undesc.length > 0) {
+      categories.push({ "title": undescTitle, "binds": undesc });
+    }
+
+    saveToDb(categories);
+    isCurrentlyParsing = false;
+    clearParsingData();
   }
 
   // ========== HYPRLAND RECURSIVE PARSING ==========
@@ -1432,6 +1715,10 @@ Item {
           root.pluginApi.togglePanel(screen);
         });
       }
+    }
+
+    function refresh() {
+      root.refresh();
     }
   }
 }

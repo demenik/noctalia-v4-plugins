@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWC stöds inte",
     "labwc-detail": "LabWC använder XML-konfigurationsformat som är inkompatibelt med detta plugin",
     "unknown-compositor": "Okänd compositor upptäckt",
-    "unknown-detail": "Detta plugin stöder endast Hyprland- och Niri-compositors"
+    "unknown-detail": "Detta plugin stöder endast Hyprland- och Niri-compositors",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "Laddar...",
@@ -20,7 +21,14 @@
     "workspace-moving": "ARBETSYTOR - FLYTTA",
     "workspace-mouse": "ARBETSYTOR - MUS",
     "search-placeholder": "Sök genvägar...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "Tangentbordsgenvägar Inställningar",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "auto",
     "color-paste-hint": "Tips: kopiera en hex-färg (t.ex. #FF6B6B) till urklipp och en klistra in-ikon visas i pillret.",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "Tangentbordsgenvägar",

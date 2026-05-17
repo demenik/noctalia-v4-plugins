@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWC nie jest obsługiwany",
     "labwc-detail": "LabWC używa formatu konfiguracji XML, który jest niekompatybilny z tą wtyczką",
     "unknown-compositor": "Wykryto nieznany kompozytor",
-    "unknown-detail": "Ta wtyczka obsługuje tylko kompozytory Hyprland i Niri"
+    "unknown-detail": "Ta wtyczka obsługuje tylko kompozytory Hyprland i Niri",
+    "hyprctl-failed": "hyprctl binds nie powiodło się - czy Hyprland działa?"
   },
   "panel": {
     "loading": "Ladowanie...",
@@ -20,7 +21,14 @@
     "workspace-moving": "OBSZARY ROBOCZE - PRZENOSZENIE",
     "workspace-mouse": "OBSZARY ROBOCZE - MYSZ",
     "search-placeholder": "Szukaj skrótów...",
-    "no-description": "(brak opisu)"
+    "no-description": "(brak opisu)",
+    "other": "Inne",
+    "undescribed": "Bez opisu",
+    "add-description": "Dodaj opis",
+    "add-description-placeholder": "Opis...",
+    "save-description": "Zapisz",
+    "cancel": "Anuluj",
+    "hide-bind": "Ukryj ten skrót"
   },
   "settings": {
     "title": "Ustawienia Skrotow Klawiszowych",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "auto",
     "color-paste-hint": "Wskazówka: skopiuj kod koloru hex (np. #FF6B6B) do schowka, a w pastylce pojawi się ikona wklejania.",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Ścieżka Hyprland Lua",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: używa hyprland.lua przez `hyprctl binds` jeśli istnieje, w innym wypadku starego parsera .conf.",
+    "undescribed-title": "Skróty bez opisu",
+    "overrides-summary": "Ukryte: {hidden} - Własne opisy: {custom}",
+    "restore-hidden": "Przywróć ukryte",
+    "restore-hidden-message": "Ukryte skróty przywrócone.",
+    "clear-overrides": "Wyczyść wszystkie nadpisania",
+    "clear-overrides-message": "Wszystkie nadpisania skrótów wyczyszczone."
   },
   "barwidget": {
     "tooltip": "Ściągawka skrótów klawiszowych",

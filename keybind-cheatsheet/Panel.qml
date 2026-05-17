@@ -346,7 +346,7 @@ Item {
         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
         x: parent.width - implicitWidth
         text: itemData.title
-        font.pointSize: 11
+        font.pointSize: Style.fontSizeM
         font.weight: Font.Bold
         color: Color.mPrimary
       }
@@ -367,9 +367,13 @@ Item {
   Component {
     id: bindComponent
     RowLayout {
+      id: bindRow
       spacing: Style.marginS
       height: 22
       Layout.bottomMargin: 1
+
+      property bool editing: false
+
       Flow {
         Layout.preferredWidth: 220
         Layout.alignment: Qt.AlignVCenter
@@ -392,13 +396,77 @@ Item {
           }
         }
       }
+
+      // Described bind: plain text (unchanged behaviour)
       NText {
+        visible: !itemData.undescribed
         Layout.fillWidth: true
         Layout.alignment: Qt.AlignVCenter
         text: itemData.desc
-        font.pointSize: 9
+        font.pointSize: Style.fontSizeXS
         color: root.descriptionTextColor
         elide: Text.ElideRight
+      }
+
+      // Undescribed bind: placeholder + add-description / hide actions
+      NText {
+        visible: itemData.undescribed && !bindRow.editing
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignVCenter
+        text: pluginApi?.tr("panel.no-description")
+        font.pointSize: Style.fontSizeXS
+        font.italic: true
+        color: Color.mOnSurfaceVariant
+        elide: Text.ElideRight
+
+        MouseArea {
+          anchors.fill: parent
+          cursorShape: Qt.PointingHandCursor
+          onClicked: { bindRow.editing = true; descInput.text = ""; descInput.inputItem.forceActiveFocus(); }
+        }
+      }
+
+      NTextInput {
+        id: descInput
+        visible: itemData.undescribed && bindRow.editing
+        Layout.fillWidth: true
+        Layout.preferredHeight: Style.baseWidgetSize
+        placeholderText: pluginApi?.tr("panel.add-description-placeholder")
+      }
+
+      NIconButton {
+        visible: itemData.undescribed && bindRow.editing
+        Layout.preferredHeight: 18
+        icon: "check"
+        tooltipText: pluginApi?.tr("panel.save-description")
+        onClicked: {
+          root.saveBindDescription(itemData.bindId, descInput.text);
+          bindRow.editing = false;
+        }
+      }
+
+      NIconButton {
+        visible: itemData.undescribed && bindRow.editing
+        Layout.preferredHeight: 18
+        icon: "close"
+        tooltipText: pluginApi?.tr("panel.cancel")
+        onClicked: { bindRow.editing = false; }
+      }
+
+      NIconButton {
+        visible: itemData.undescribed && !bindRow.editing
+        Layout.preferredHeight: 18
+        icon: "edit"
+        tooltipText: pluginApi?.tr("panel.add-description")
+        onClicked: { bindRow.editing = true; descInput.text = ""; descInput.inputItem.forceActiveFocus(); }
+      }
+
+      NIconButton {
+        visible: itemData.undescribed && !bindRow.editing
+        Layout.preferredHeight: 18
+        icon: "eye-off"
+        tooltipText: pluginApi?.tr("panel.hide-bind")
+        onClicked: { root.hideBind(itemData.bindId); }
       }
     }
   }
@@ -427,6 +495,39 @@ Item {
     return root.keyTextDefaultOverride || root.keyLabelColor;
   }
 
+  // ===== Bind override helpers (shared keyed map in plugin settings) =====
+  function _cloneOverrides() {
+    if (!pluginApi || !pluginApi.pluginSettings) return ({});
+    var src = pluginApi.pluginSettings.bindOverrides || ({});
+    try { return JSON.parse(JSON.stringify(src)); } catch (e) { return ({}); }
+  }
+
+  function saveBindDescription(bindId, desc) {
+    if (!pluginApi || !bindId) return;
+    var o = _cloneOverrides();
+    if (!o[bindId]) o[bindId] = ({});
+    var trimmed = (desc || "").trim();
+    if (trimmed.length === 0) {
+      delete o[bindId].desc;
+      if (Object.keys(o[bindId]).length === 0) delete o[bindId];
+    } else {
+      o[bindId].desc = trimmed;
+    }
+    pluginApi.pluginSettings.bindOverrides = o;
+    pluginApi.saveSettings();
+    pluginApi.mainInstance?.refresh();
+  }
+
+  function hideBind(bindId) {
+    if (!pluginApi || !bindId) return;
+    var o = _cloneOverrides();
+    if (!o[bindId]) o[bindId] = ({});
+    o[bindId].hidden = true;
+    pluginApi.pluginSettings.bindOverrides = o;
+    pluginApi.saveSettings();
+    pluginApi.mainInstance?.refresh();
+  }
+
   function buildColumnItems(categoryIndices) {
     var result = [];
     if (!categoryIndices) return result;
@@ -439,11 +540,15 @@ Item {
       result.push({ type: "header", title: cat.title });
       var term = root.searchText.toLowerCase();
       for (var j = 0; j < cat.binds.length; j++) {
-        if (!term || (cat.binds[j].desc || "").toLowerCase().indexOf(term) !== -1) {
+        var bnd = cat.binds[j];
+        var isUndesc = bnd.undescribed === true;
+        if (!term || (bnd.desc && bnd.desc.toLowerCase().indexOf(term) !== -1) || (isUndesc && bnd.keys.toLowerCase().indexOf(term) !== -1)) {
           result.push({
             type: "bind",
-            keys: cat.binds[j].keys,
-            desc: cat.binds[j].desc
+            keys: bnd.keys,
+            desc: bnd.desc,
+            bindId: bnd.bindId || "",
+            undescribed: isUndesc
           });
         }
       }

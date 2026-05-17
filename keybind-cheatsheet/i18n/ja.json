@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWCはサポートされていません",
     "labwc-detail": "LabWCはこのプラグインと互換性のないXML設定形式を使用しています",
     "unknown-compositor": "不明なコンポジターが検出されました",
-    "unknown-detail": "このプラグインはHyprlandとNiriコンポジターのみをサポートしています"
+    "unknown-detail": "このプラグインはHyprlandとNiriコンポジターのみをサポートしています",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "読み込み中...",
@@ -20,7 +21,14 @@
     "workspace-moving": "ワークスペース - 移動",
     "workspace-mouse": "ワークスペース - マウス",
     "search-placeholder": "キーバインドを検索...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "キーバインド一覧の設定",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "自動",
     "color-paste-hint": "ヒント: 16 進カラー (例: #FF6B6B) をクリップボードにコピーすると、ピル内に貼り付けアイコンが表示されます。",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "キーバインドチートシート",

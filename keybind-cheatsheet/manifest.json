@@ -1,13 +1,21 @@
 {
   "id": "keybind-cheatsheet",
   "name": "Keybind Cheatsheet",
-  "version": "3.6.2",
+  "version": "3.7.0",
   "minNoctaliaVersion": "3.6.0",
   "author": "blacku",
   "license": "MIT",
   "repository": "https://github.com/noctalia-dev/noctalia-plugins",
   "description": "Universal keyboard shortcuts keymap that automatically detects and displays keybindings for Hyprland, Niri, or MangoWC compositors.",
-  "tags": ["Bar", "Panel", "System", "Indicator", "Hyprland", "Niri", "MangoWC"],
+  "tags": [
+    "Bar",
+    "Panel",
+    "System",
+    "Indicator",
+    "Hyprland",
+    "Niri",
+    "MangoWC"
+  ],
   "entryPoints": {
     "main": "Main.qml",
     "barWidget": "BarWidget.qml",
@@ -27,10 +35,12 @@
       "columnCount": 3,
       "modKeyVariable": "$mod",
       "hyprlandConfigPath": "~/.config/hypr/hyprland.conf",
+      "hyprlandLuaConfigPath": "~/.config/hypr/hyprland.lua",
+      "hyprlandParserMode": "auto",
       "niriConfigPath": "~/.config/niri/config.kdl",
       "mangoConfigPath": "~/.config/mango/config.conf",
       "mergeSequentialBinds": true,
-      "showUndescribedBinds": false,
+      "showUndescribedBinds": true,
       "splitLargeWorkspaceCategory": true,
       "workspaceSplitThreshold": 12,
       "keyColorAlt": "#FF6B6B",
@@ -52,7 +62,8 @@
       "keyTextNumeric": "",
       "keyTextMouse": "",
       "keyTextDefault": "",
-      "descriptionTextColor": "#E0E0E0"
+      "descriptionTextColor": "#E0E0E0",
+      "bindOverrides": {}
     }
   }
 }

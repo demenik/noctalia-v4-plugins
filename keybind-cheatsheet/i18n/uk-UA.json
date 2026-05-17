@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWC не підтримується",
     "labwc-detail": "LabWC використовує формат конфігурації XML, несумісний з цим плагіном",
     "unknown-compositor": "Виявлено невідомий композитор",
-    "unknown-detail": "Цей плагін підтримує лише композитори Hyprland та Niri"
+    "unknown-detail": "Цей плагін підтримує лише композитори Hyprland та Niri",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "Завантаження...",
@@ -20,7 +21,14 @@
     "workspace-moving": "РОБОЧІ ОБЛАСТІ - ПЕРЕМІЩЕННЯ",
     "workspace-mouse": "РОБОЧІ ОБЛАСТІ - МИША",
     "search-placeholder": "Пошук скорочень...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "Налаштування гарячих клавіш",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "авто",
     "color-paste-hint": "Порада: скопіюйте hex-колір (напр. #FF6B6B) у буфер обміну — у пілюлі з'явиться іконка вставки.",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "Шпаргалка гарячих клавіш",

@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWC non è supportato",
     "labwc-detail": "LabWC utilizza un formato di configurazione XML incompatibile con questo plugin",
     "unknown-compositor": "Rilevato compositor sconosciuto",
-    "unknown-detail": "Questo plugin supporta solo i compositor Hyprland e Niri"
+    "unknown-detail": "Questo plugin supporta solo i compositor Hyprland e Niri",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "Caricamento...",
@@ -20,7 +21,14 @@
     "workspace-moving": "SPAZI DI LAVORO - SPOSTAMENTO",
     "workspace-mouse": "SPAZI DI LAVORO - MOUSE",
     "search-placeholder": "Cerca scorciatoie...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "Impostazioni Scorciatoie da Tastiera",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "auto",
     "color-paste-hint": "Suggerimento: copia un colore hex (es. #FF6B6B) negli appunti e apparirà un'icona di incolla dentro la pillola.",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "Scheda scorciatoie",

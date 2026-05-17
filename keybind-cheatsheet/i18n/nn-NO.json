@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWC er ikkje støtta",
     "labwc-detail": "LabWC brukar XML-konfigurasjonsformat som er inkompatibelt med denne plugin-en",
     "unknown-compositor": "Ukjend compositor oppdaga",
-    "unknown-detail": "Denne plugin-en støttar berre Hyprland- og Niri-compositorar"
+    "unknown-detail": "Denne plugin-en støttar berre Hyprland- og Niri-compositorar",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "Lastar...",
@@ -20,7 +21,14 @@
     "workspace-moving": "ARBEIDSOMRÅDE - FLYTTE",
     "workspace-mouse": "ARBEIDSOMRÅDE - MUS",
     "search-placeholder": "Søk snarvegar...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "Tastesnarveg-jukselapp Innstillingar",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "auto",
     "color-paste-hint": "Tips: kopier ein hex-farge (t.d. #FF6B6B) til utklippstavla, så kjem eit lim-inn-ikon i pilla.",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "Tastesnarveg-jukselapp",

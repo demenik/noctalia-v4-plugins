@@ -7,7 +7,8 @@
     "labwc-not-supported": "不支持 LabWC",
     "labwc-detail": "LabWC 使用与此插件不兼容的 XML 配置格式",
     "unknown-compositor": "检测到未知的合成器",
-    "unknown-detail": "此插件仅支持 Hyprland 和 Niri 合成器"
+    "unknown-detail": "此插件仅支持 Hyprland 和 Niri 合成器",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "加载中...",
@@ -20,7 +21,14 @@
     "workspace-moving": "工作区 - 移动",
     "workspace-mouse": "工作区 - 鼠标",
     "search-placeholder": "搜索快捷键...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "快捷键速查表设置",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "自动",
     "color-paste-hint": "提示：将十六进制颜色 (如 #FF6B6B) 复制到剪贴板，胶囊内会出现粘贴图标以便快速粘贴。",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "快捷键速查表",

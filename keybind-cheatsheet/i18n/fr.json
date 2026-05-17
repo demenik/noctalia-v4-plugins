@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWC n'est pas pris en charge",
     "labwc-detail": "LabWC utilise un format de configuration XML incompatible avec ce plugin",
     "unknown-compositor": "Compositeur inconnu détecté",
-    "unknown-detail": "Ce plugin ne prend en charge que les compositeurs Hyprland et Niri"
+    "unknown-detail": "Ce plugin ne prend en charge que les compositeurs Hyprland et Niri",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "Chargement...",
@@ -20,7 +21,14 @@
     "workspace-moving": "ESPACES DE TRAVAIL - DÉPLACER",
     "workspace-mouse": "ESPACES DE TRAVAIL - SOURIS",
     "search-placeholder": "Rechercher des raccourcis...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "Parametres des Raccourcis Clavier",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "auto",
     "color-paste-hint": "Astuce : copiez une couleur hex (ex. #FF6B6B) dans le presse-papiers et une icône de collage apparaîtra dans la pastille.",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "Aide-mémoire des raccourcis",

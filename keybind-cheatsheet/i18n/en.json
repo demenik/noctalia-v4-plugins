@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWC is not supported",
     "labwc-detail": "LabWC uses XML config format which is incompatible with this plugin",
     "unknown-compositor": "Unknown compositor detected",
-    "unknown-detail": "This plugin only supports Hyprland and Niri compositors"
+    "unknown-detail": "This plugin only supports Hyprland and Niri compositors",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "Loading...",
@@ -20,7 +21,14 @@
     "workspace-moving": "WORKSPACES - MOVING",
     "workspace-mouse": "WORKSPACES - MOUSE",
     "search-placeholder": "Search keybinds...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "Keybind Cheatsheet Settings",
@@ -86,7 +94,16 @@
     "color-paste-hint": "Tip: copy any hex color (e.g. #FF6B6B) to your clipboard and a paste icon will appear inside the pill for quick paste.",
     "reset-color": "Reset to default",
     "reset-all-colors": "Reset all colors",
-    "color-auto": "auto"
+    "color-auto": "auto",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "Keybind Cheatsheet",

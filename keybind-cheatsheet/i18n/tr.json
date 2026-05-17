@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWC desteklenmiyor",
     "labwc-detail": "LabWC bu eklentiyle uyumlu olmayan XML yapılandırma formatı kullanıyor",
     "unknown-compositor": "Bilinmeyen kompozitör algılandı",
-    "unknown-detail": "Bu eklenti yalnızca Hyprland ve Niri kompozitörlerini destekler"
+    "unknown-detail": "Bu eklenti yalnızca Hyprland ve Niri kompozitörlerini destekler",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "Yukleniyor...",
@@ -20,7 +21,14 @@
     "workspace-moving": "ÇALIŞMA ALANLARI - TAŞIMA",
     "workspace-mouse": "ÇALIŞMA ALANLARI - FARE",
     "search-placeholder": "Kısayol ara...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "Klavye Kisayollari Ayarlari",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "auto",
     "color-paste-hint": "İpucu: bir hex rengi (ör. #FF6B6B) panoya kopyalayın; hapın içinde hızlı yapıştırma simgesi görünecek.",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "Kısayol Kopya Kağıdı",

@@ -7,7 +7,8 @@
     "labwc-not-supported": "LabWC no es compatible",
     "labwc-detail": "LabWC usa formato de configuración XML que es incompatible con este plugin",
     "unknown-compositor": "Compositor desconocido detectado",
-    "unknown-detail": "Este plugin solo admite los compositores Hyprland y Niri"
+    "unknown-detail": "Este plugin solo admite los compositores Hyprland y Niri",
+    "hyprctl-failed": "hyprctl binds failed - is Hyprland running?"
   },
   "panel": {
     "loading": "Cargando...",
@@ -20,7 +21,14 @@
     "workspace-moving": "ESPACIOS DE TRABAJO - MOVER",
     "workspace-mouse": "ESPACIOS DE TRABAJO - RATÓN",
     "search-placeholder": "Buscar atajos...",
-    "no-description": "(no description)"
+    "no-description": "(no description)",
+    "other": "Other",
+    "undescribed": "Without Description",
+    "add-description": "Add description",
+    "add-description-placeholder": "Description...",
+    "save-description": "Save",
+    "cancel": "Cancel",
+    "hide-bind": "Hide this bind"
   },
   "settings": {
     "title": "Configuracion de Atajos de Teclado",
@@ -86,7 +94,16 @@
     "reset-all-colors": "Reset all colors",
     "color-auto": "auto",
     "color-paste-hint": "Consejo: copia un color hex (p. ej. #FF6B6B) al portapapeles y aparecerá un icono de pegar dentro de la pastilla.",
-    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle"
+    "keybind-ipc-command": "qs -c \"noctalia-shell\" ipc call plugin:keybind-cheatsheet toggle",
+    "hyprland-lua-path": "Hyprland Lua Path",
+    "hyprland-parser-mode": "Parser:",
+    "hyprland-lua-hint": "Auto: uses hyprland.lua via `hyprctl binds` when it exists, otherwise the legacy .conf parser.",
+    "undescribed-title": "Undescribed Binds",
+    "overrides-summary": "Hidden: {hidden} - Custom descriptions: {custom}",
+    "restore-hidden": "Restore hidden",
+    "restore-hidden-message": "Hidden binds restored.",
+    "clear-overrides": "Clear all overrides",
+    "clear-overrides-message": "All bind overrides cleared."
   },
   "barwidget": {
     "tooltip": "Hoja de trucos de atajos",

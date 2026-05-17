@@ -1,5 +1,35 @@
 # Changelog
 
+## [3.7.0] - 2026-05-17
+
+### Features
+
+**Hyprland Lua config support (`hyprland.lua`)**
+- Hyprland 0.55+ replaces hyprlang `.conf` with a Lua config. Added a second Hyprland parsing tor that queries `hyprctl binds -j` for the authoritative, already-evaluated bind list — correctly handling `require()`, `for` loops, and multi-key chords that cannot be recovered by static text parsing
+- Categories are recovered by lightly scanning `hyprland.lua` (and its `require()` modules) for `-- N. NAME` headers and `description = "..."` literals, with a prefix heuristic for loop-generated binds (e.g. `"Workspace " .. i`)
+- Parser mode setting `auto` / `lua` / `conf`: `auto` uses the Lua tor when `hyprland.lua` exists, otherwise the existing `.conf` parser
+- The legacy hyprlang `.conf` parser is **kept unchanged as a fallback** for users still on hyprlang configs
+
+**Add description / hide binds without a description**
+- Binds with no description are surfaced in a dedicated "Without Description" section instead of being dropped
+- Each undescribed bind can be given a custom description inline, or hidden, directly from the panel
+- Overrides are keyed by a stable bind identity (`submap|modmask|key|flags|dispatcher`) that excludes the unstable `__lua` registry ref, so they survive Hyprland restarts
+- New settings: `showUndescribedBinds`, an override summary, "Restore hidden" and "Clear all overrides" actions
+
+**`refresh` IPC**
+- Added `refresh` to the plugin IPC handler so the cheatsheet can be re-parsed from a keybind, e.g. `qs ipc call plugin:keybind-cheatsheet refresh`
+
+### Bug Fixes
+
+- Fixed a `text` binding loop on the window-height settings input (now seeded once via `Component.onCompleted`)
+- Replaced hardcoded `font.pointSize` in bind rows with `Style.fontSizeXS`
+
+### Notes
+
+- This release bundles the color-customization, MangoWC-support and Niri parser work previously tracked separately (see the 3.5.0–3.6.2 entries below) together with the Hyprland Lua support, shipped as a single 3.7.0 release.
+
+---
+
 ## [3.6.2] - 2026-04-29
 
 ### i18n
