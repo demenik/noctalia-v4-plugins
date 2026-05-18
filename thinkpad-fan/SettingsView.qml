@@ -9,6 +9,7 @@ ColumnLayout {
 
     property var pluginApi: null
 
+    // ===== EDIT STATE (With native fallback to the manifest) =====
     property bool editColorizeByStatus:
         pluginApi?.pluginSettings?.colorizeByStatus ??
         pluginApi?.manifest?.metadata?.defaultSettings?.colorizeByStatus ??
@@ -19,7 +20,7 @@ ColumnLayout {
         pluginApi?.manifest?.metadata?.defaultSettings?.allowPopupOpening ??
         true
 
-    // Saving utilities
+    // ===== SAVE =====
     function saveSettings() {
         if (!pluginApi) return
 
@@ -29,15 +30,15 @@ ColumnLayout {
         pluginApi.saveSettings()
     }
 
-    // ===== Settings window =====
+    // ===== UI =====
     NText {
-        text: "Thinkpad Fan Widget Settings"
+        text: "ThinkPad - Fan & Thermal Control - Settings"
         pointSize: Style.fontSizeM
         font.weight: Font.Bold
         color: Color.mOnSurface
     }
 
-    // 1: Dynamic color
+    // Option 1: Dynamic coloring based on fan status
     NToggle {
         Layout.fillWidth: true
         label: "Dynamic coloring"
@@ -49,7 +50,7 @@ ColumnLayout {
         }
     }
 
-    // Option 2: Left Click Enabled/Disabled
+    // Option 2: Left Click Interaction Toggle
     NToggle {
         Layout.fillWidth: true
         label: "Allow opening controls"
