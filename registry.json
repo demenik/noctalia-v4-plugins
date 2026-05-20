@@ -1270,7 +1270,7 @@
     {
       "id": "osk-toggle",
       "name": "OSK Toggle",
-      "version": "1.0.2",
+      "version": "1.0.1",
       "official": false,
       "author": "blackteaextract",
       "description": "Toggle an on-screen keyboard (Squeekboard or wvkbd) with live availability detection, hover icons, and configurable settings. Supersedes squeekboard-toggle.",
