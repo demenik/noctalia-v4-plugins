@@ -370,7 +370,7 @@ ColumnLayout {
             spacing: Style.marginXS
 
             function overrideCount(kind) {
-              var o = rootItem.pluginApi?.pluginSettings?.bindOverrides || ({});
+              var o = root.pluginApi?.pluginSettings?.bindOverrides || ({});
               var n = 0;
               for (var k in o) {
                 if (kind === "hidden" && o[k] && o[k].hidden === true) n++;
@@ -381,9 +381,10 @@ ColumnLayout {
 
             NText {
               Layout.fillWidth: true
-              text: pluginApi?.tr("settings.overrides-summary")
-                    .replace("{hidden}", parent.overrideCount("hidden"))
-                    .replace("{custom}", parent.overrideCount("desc"))
+              text: pluginApi?.tr("settings.overrides-summary", {
+                "hidden": parent.overrideCount("hidden"),
+                "custom": parent.overrideCount("desc")
+              })
               color: Color.mOnSurfaceVariant
               pointSize: Style.fontSizeXS
               wrapMode: Text.WordWrap
@@ -396,19 +397,19 @@ ColumnLayout {
                 text: pluginApi?.tr("settings.restore-hidden")
                 icon: "eye"
                 onClicked: {
-                  var o = rootItem.pluginApi?.pluginSettings?.bindOverrides || ({});
+                  var o = root.pluginApi?.pluginSettings?.bindOverrides || ({});
                   var next = ({});
                   for (var k in o) {
                     var e = ({});
                     if (o[k] && o[k].desc) e.desc = o[k].desc;
                     if (Object.keys(e).length > 0) next[k] = e;
                   }
-                  if (rootItem.pluginApi && rootItem.pluginApi.pluginSettings) {
-                    rootItem.pluginApi.pluginSettings.bindOverrides = next;
-                    rootItem.pluginApi.saveSettings();
-                    rootItem.pluginApi.mainInstance?.refresh();
+                  if (root.pluginApi && root.pluginApi.pluginSettings) {
+                    root.pluginApi.pluginSettings.bindOverrides = next;
+                    root.pluginApi.saveSettings();
+                    root.pluginApi.mainInstance?.refresh();
                   }
-                  ToastService.showNotice(rootItem.pluginApi?.tr("settings.restore-hidden-message"));
+                  ToastService.showNotice(root.pluginApi?.tr("settings.restore-hidden-message"));
                 }
               }
 
@@ -416,12 +417,12 @@ ColumnLayout {
                 text: pluginApi?.tr("settings.clear-overrides")
                 icon: "rotate"
                 onClicked: {
-                  if (rootItem.pluginApi && rootItem.pluginApi.pluginSettings) {
-                    rootItem.pluginApi.pluginSettings.bindOverrides = ({});
-                    rootItem.pluginApi.saveSettings();
-                    rootItem.pluginApi.mainInstance?.refresh();
+                  if (root.pluginApi && root.pluginApi.pluginSettings) {
+                    root.pluginApi.pluginSettings.bindOverrides = ({});
+                    root.pluginApi.saveSettings();
+                    root.pluginApi.mainInstance?.refresh();
                   }
-                  ToastService.showNotice(rootItem.pluginApi?.tr("settings.clear-overrides-message"));
+                  ToastService.showNotice(root.pluginApi?.tr("settings.clear-overrides-message"));
                 }
               }
             }

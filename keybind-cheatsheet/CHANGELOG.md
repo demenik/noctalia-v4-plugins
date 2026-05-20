@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.7.1] - 2026-05-20
+
+### Fixes
+
+- Settings: fix `ReferenceError: rootItem is not defined` in the bind-override management section — the override counter, **Restore hidden**, and **Clear all overrides** buttons were broken because of stale `rootItem` references after the `id` rename
+- Settings: use the native `tr(key, interpolations)` API for the overrides summary line instead of chained `.replace()` calls (review feedback from @spiros132)
+
 ## [3.7.0] - 2026-05-17
 
 ### Features
