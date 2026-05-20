@@ -11,13 +11,7 @@ ColumnLayout {
   property bool loadingWallpaperProperties: false
   property string wallpaperPropertyError: ""
   property var wallpaperPropertyDefinitions: []
-  property var propertyValueFor: null
-  property var numberOr: null
-  property var formatSliderValue: null
-  property var comboChoicesFor: null
-  property var ensureColorValue: null
-  property var serializePropertyValue: null
-  property var setPropertyValue: null
+  property var propertyEditorApi: null
 
   Layout.fillWidth: true
   spacing: Style.marginS
@@ -70,15 +64,18 @@ ColumnLayout {
       Layout.fillWidth: true
       spacing: Style.marginXS
 
-      property bool boolValue: !!(root.propertyValueFor ? root.propertyValueFor(modelData) : false)
-      property real sliderValue: root.numberOr ? root.numberOr(root.propertyValueFor ? root.propertyValueFor(modelData) : 0, 0) : 0
-      property string comboValue: String(root.propertyValueFor ? root.propertyValueFor(modelData) : "")
-      property string textValue: String(root.propertyValueFor ? root.propertyValueFor(modelData) : "")
+      property bool boolValue: !!(root.propertyEditorApi?.propertyValueFor ? root.propertyEditorApi.propertyValueFor(modelData) : false)
+      property real sliderValue: root.propertyEditorApi?.numberOr ? root.propertyEditorApi.numberOr(root.propertyEditorApi?.propertyValueFor ? root.propertyEditorApi.propertyValueFor(modelData) : 0, 0) : 0
+      property string comboValue: String(root.propertyEditorApi?.propertyValueFor ? root.propertyEditorApi.propertyValueFor(modelData) : "")
+      property string textValue: String(root.propertyEditorApi?.propertyValueFor ? root.propertyEditorApi.propertyValueFor(modelData) : "")
+      property string imageValue: modelData.type === "image"
+        ? String(modelData.imageSource || "")
+        : ""
       property color colorValue: Qt.rgba(1, 1, 1, 1)
 
       Component.onCompleted: {
-        if (modelData.type === "color" && root.ensureColorValue && root.propertyValueFor) {
-          propertyEditor.colorValue = root.ensureColorValue(root.propertyValueFor(modelData));
+        if (modelData.type === "color" && root.propertyEditorApi?.ensureColorValue && root.propertyEditorApi?.propertyValueFor) {
+          propertyEditor.colorValue = root.propertyEditorApi.ensureColorValue(root.propertyEditorApi.propertyValueFor(modelData));
         }
       }
 
@@ -93,8 +90,8 @@ ColumnLayout {
             return;
           }
           propertyEditor.boolValue = checked;
-          if (root.setPropertyValue) {
-            root.setPropertyValue(modelData.key, checked);
+          if (root.propertyEditorApi?.setPropertyValue) {
+            root.propertyEditorApi.setPropertyValue(modelData.key, checked);
           }
         }
       }
@@ -104,18 +101,18 @@ ColumnLayout {
         Layout.preferredHeight: visible ? implicitHeight : 0
         visible: modelData.type === "slider"
         label: modelData.label
-        from: root.numberOr ? root.numberOr(modelData.min, 0) : 0
-        to: root.numberOr ? root.numberOr(modelData.max, 100) : 100
-        stepSize: Math.max(root.numberOr ? root.numberOr(modelData.step, 1) : 1, 0.001)
+        from: root.propertyEditorApi?.numberOr ? root.propertyEditorApi.numberOr(modelData.min, 0) : 0
+        to: root.propertyEditorApi?.numberOr ? root.propertyEditorApi.numberOr(modelData.max, 100) : 100
+        stepSize: Math.max(root.propertyEditorApi?.numberOr ? root.propertyEditorApi.numberOr(modelData.step, 1) : 1, 0.001)
         value: propertyEditor.sliderValue
-        text: root.formatSliderValue ? root.formatSliderValue(propertyEditor.sliderValue, modelData.step) : String(propertyEditor.sliderValue)
+        text: root.propertyEditorApi?.formatSliderValue ? root.propertyEditorApi.formatSliderValue(propertyEditor.sliderValue, modelData.step) : String(propertyEditor.sliderValue)
         onMoved: value => {
           if (value === propertyEditor.sliderValue) {
             return;
           }
           propertyEditor.sliderValue = value;
-          if (root.setPropertyValue) {
-            root.setPropertyValue(modelData.key, value);
+          if (root.propertyEditorApi?.setPropertyValue) {
+            root.propertyEditorApi.setPropertyValue(modelData.key, value);
           }
         }
       }
@@ -125,7 +122,7 @@ ColumnLayout {
         Layout.preferredHeight: visible ? implicitHeight : 0
         visible: modelData.type === "combo"
         label: modelData.label
-        model: root.comboChoicesFor ? root.comboChoicesFor(modelData) : []
+        model: root.propertyEditorApi?.comboChoicesFor ? root.propertyEditorApi.comboChoicesFor(modelData) : []
         currentKey: propertyEditor.comboValue
         onSelected: key => {
           const normalizedKey = String(key);
@@ -133,8 +130,8 @@ ColumnLayout {
             return;
           }
           propertyEditor.comboValue = normalizedKey;
-          if (root.setPropertyValue) {
-            root.setPropertyValue(modelData.key, normalizedKey);
+          if (root.propertyEditorApi?.setPropertyValue) {
+            root.propertyEditorApi.setPropertyValue(modelData.key, normalizedKey);
           }
         }
       }
@@ -151,8 +148,8 @@ ColumnLayout {
             return;
           }
           propertyEditor.textValue = nextText;
-          if (root.setPropertyValue) {
-            root.setPropertyValue(modelData.key, nextText);
+          if (root.propertyEditorApi?.setPropertyValue) {
+            root.propertyEditorApi.setPropertyValue(modelData.key, nextText);
           }
         }
         onAccepted: {
@@ -161,8 +158,8 @@ ColumnLayout {
             return;
           }
           propertyEditor.textValue = nextText;
-          if (root.setPropertyValue) {
-            root.setPropertyValue(modelData.key, nextText);
+          if (root.propertyEditorApi?.setPropertyValue) {
+            root.propertyEditorApi.setPropertyValue(modelData.key, nextText);
           }
         }
       }
@@ -178,6 +175,63 @@ ColumnLayout {
         wrapMode: Text.Wrap
         topPadding: Style.marginXS
         bottomPadding: Style.marginXS
+      }
+
+      ColumnLayout {
+        Layout.fillWidth: true
+        Layout.preferredHeight: visible ? implicitHeight : 0
+        visible: modelData.type === "image"
+        spacing: Style.marginXS
+
+        NText {
+          Layout.fillWidth: true
+          visible: String(modelData.label || "").trim().length > 0
+          text: modelData.label
+          color: Color.mOnSurface
+          font.pointSize: Style.fontSizeM
+          wrapMode: Text.Wrap
+        }
+
+        Rectangle {
+          Layout.fillWidth: true
+          Layout.preferredHeight: 160 * Style.uiScaleRatio
+          radius: Style.radiusM
+          color: Qt.alpha(Color.mSurfaceVariant, 0.35)
+          border.width: Style.borderS
+          border.color: Qt.alpha(Color.mOutline, 0.35)
+          clip: true
+
+          Image {
+            id: sceneTexturePreview
+            anchors.fill: parent
+            anchors.margins: Style.marginXS
+            source: parent.parent.visible && root.propertyEditorApi?.resolvePropertyImageSource
+              ? root.propertyEditorApi.resolvePropertyImageSource(propertyEditor.imageValue)
+              : ""
+            fillMode: Image.PreserveAspectFit
+            asynchronous: true
+            cache: false
+          }
+
+          NText {
+            anchors.centerIn: parent
+            visible: sceneTexturePreview.status === Image.Error || sceneTexturePreview.source.length === 0
+            text: propertyEditor.imageValue
+            color: Color.mOnSurfaceVariant
+            wrapMode: Text.WrapAnywhere
+            width: parent.width - Style.marginM * 2
+            horizontalAlignment: Text.AlignHCenter
+          }
+        }
+
+        NText {
+          Layout.fillWidth: true
+          visible: sceneTexturePreview.status === Image.Error || sceneTexturePreview.source.length === 0
+          text: propertyEditor.imageValue
+          color: Color.mOnSurfaceVariant
+          font.pointSize: Style.fontSizeS
+          wrapMode: Text.WrapAnywhere
+        }
       }
 
       ColumnLayout {
@@ -210,15 +264,15 @@ ColumnLayout {
           selectedColor: propertyEditor.colorValue
           onColorSelected: color => {
             propertyEditor.colorValue = color;
-            if (root.setPropertyValue) {
-              root.setPropertyValue(modelData.key, color);
+            if (root.propertyEditorApi?.setPropertyValue) {
+              root.propertyEditorApi.setPropertyValue(modelData.key, color);
             }
           }
         }
 
         NText {
           Layout.fillWidth: true
-          text: root.serializePropertyValue ? root.serializePropertyValue(propertyEditor.colorValue, "color") : ""
+          text: root.propertyEditorApi?.serializePropertyValue ? root.propertyEditorApi.serializePropertyValue(propertyEditor.colorValue, "color") : ""
           color: Color.mOnSurfaceVariant
           font.pointSize: Style.fontSizeS
         }

@@ -1,7 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 
 import qs.Commons
+import qs.Services.UI
 import qs.Widgets
 
 Rectangle {
@@ -14,14 +16,23 @@ Rectangle {
   signal errorDetailsExpandedRequested(bool value)
   signal dismissRequested()
 
+  function copiedErrorText() {
+    const summary = String(mainInstance?.lastError || "").trim();
+    const details = String(mainInstance?.lastErrorDetails || "").trim();
+    if (details.length === 0) {
+      return summary;
+    }
+    return summary + "\n\n" + details;
+  }
+
   visible: !!(mainInstance?.lastError && mainInstance.lastError.length > 0)
   Layout.fillWidth: true
   implicitHeight: errorBannerContent.implicitHeight + Style.marginS * 2
   Layout.preferredHeight: implicitHeight
   radius: Style.radiusM
-  color: Color.mSurface
+  color: Qt.alpha(Color.mError, 0.08)
   border.width: Style.borderS
-  border.color: Qt.alpha(Color.mOutline, 0.2)
+  border.color: Qt.alpha(Color.mError, 0.32)
 
   ColumnLayout {
     id: errorBannerContent
@@ -44,11 +55,24 @@ Rectangle {
 
       NText {
         text: pluginApi?.tr("panel.errorBannerTitle")
-        color: Color.mOnSurface
+        color: Color.mError
         font.weight: Font.Bold
       }
 
       Item { Layout.fillWidth: true }
+
+      NIconButton {
+        icon: "copy"
+        tooltipText: pluginApi?.tr("panel.errorCopy")
+        onClicked: {
+          const text = root.copiedErrorText();
+          if (text.length === 0) {
+            return;
+          }
+          Quickshell.clipboardText = text;
+          ToastService.showNotice(pluginApi?.tr("panel.title"), pluginApi?.tr("panel.errorCopied"), "copy");
+        }
+      }
 
       NButton {
         text: root.errorDetailsExpanded
@@ -70,8 +94,7 @@ Rectangle {
       text: mainInstance?.lastError ?? ""
       color: Color.mOnSurface
       wrapMode: Text.WordWrap
-      maximumLineCount: 2
-      elide: Text.ElideRight
+      font.weight: Font.Medium
     }
 
     Rectangle {
@@ -79,9 +102,9 @@ Rectangle {
       Layout.fillWidth: true
       Layout.preferredHeight: 136 * Style.uiScaleRatio
       radius: Style.radiusS
-      color: Qt.alpha(Color.mSurfaceVariant, 0.35)
+      color: Qt.alpha(Color.mSurface, 0.55)
       border.width: Style.borderS
-      border.color: Qt.alpha(Color.mOutline, 0.25)
+      border.color: Qt.alpha(Color.mError, 0.18)
 
       NScrollView {
         anchors.fill: parent

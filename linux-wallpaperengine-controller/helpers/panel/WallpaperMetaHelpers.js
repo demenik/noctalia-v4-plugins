@@ -5,14 +5,6 @@ function basename(path) {
   return parts.length > 0 ? parts[parts.length - 1] : "";
 }
 
-function workshopUrlForWallpaper(item) {
-  const wallpaperId = String(item && item.id || "").trim();
-  if (!/^\d+$/.test(wallpaperId)) {
-    return "";
-  }
-  return "https://steamcommunity.com/sharedfiles/filedetails/?id=" + wallpaperId;
-}
-
 function fileExt(path) {
   const raw = basename(path);
   const idx = raw.lastIndexOf(".");
@@ -101,9 +93,6 @@ function resolutionFilterKey(value) {
   }
 
   const longestEdge = Math.max(width, height);
-  if (longestEdge >= 7680) {
-    return "8k";
-  }
   if (longestEdge >= 3840) {
     return "4k";
   }

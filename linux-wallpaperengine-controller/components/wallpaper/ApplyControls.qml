@@ -2,20 +2,27 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import "."
+
 import qs.Commons
 import qs.Widgets
 
 ColumnLayout {
   id: root
 
+  // Shared context.
   property var pluginApi: null
   property var mainInstance: null
   property var selectedWallpaperData: null
+
+  // Apply target selection.
   property bool singleScreenMode: true
   property bool applyAllDisplays: true
   property bool applyTargetExpanded: false
   property var screenModel: []
   property string selectedScreenName: ""
+
+  // Per-apply runtime options.
   property string selectedScaling: "fill"
   property string selectedClamp: "clamp"
   property int selectedVolume: 100
@@ -25,18 +32,16 @@ ColumnLayout {
   property bool selectedDisableParallax: false
   property bool applyWallpaperColorsOnApply: false
   property bool applyingWallpaperColors: false
+  property bool showApplyButton: true
+
+  // Extra wallpaper property editor state.
   property bool extraPropertiesEditorEnabled: true
   property bool loadingWallpaperProperties: false
   property string wallpaperPropertyError: ""
   property var wallpaperPropertyDefinitions: []
-  property var propertyValueFor: null
-  property var numberOr: null
-  property var formatSliderValue: null
-  property var comboChoicesFor: null
-  property var ensureColorValue: null
-  property var serializePropertyValue: null
-  property var setPropertyValue: null
+  property var propertyEditorApi: null
 
+  // Upstream actions.
   signal applyRequested()
   signal applyAllDisplaysRequested(bool value)
   signal applyTargetExpandedRequested(bool value)
@@ -50,28 +55,21 @@ ColumnLayout {
   signal selectedDisableParallaxRequested(bool value)
   signal applyWallpaperColorsOnApplyRequested(bool value)
 
-  readonly property string applyButtonText: {
-    if (root.singleScreenMode) {
-      return pluginApi?.tr("panel.confirmApply");
-    }
-
-    if (root.applyAllDisplays) {
-      return pluginApi?.tr("panel.applyAllDisplays");
-    }
-
-    return pluginApi?.tr("panel.applySingleDisplay", { screen: root.selectedScreenName });
-  }
-
   Layout.fillWidth: true
   spacing: Style.marginS
 
+  // Primary apply action and display target chooser.
   RowLayout {
     Layout.fillWidth: true
+    visible: root.showApplyButton || (!root.singleScreenMode)
     spacing: Style.marginS
 
     NButton {
+      visible: root.showApplyButton
       Layout.fillWidth: true
-      text: root.applyButtonText
+      text: root.applyAllDisplays
+        ? pluginApi?.tr("panel.applyAllDisplays")
+        : pluginApi?.tr("panel.applySingleDisplay", { screen: root.selectedScreenName })
       icon: "check"
       enabled: (root.mainInstance?.engineAvailable ?? false) && !!root.selectedWallpaperData
       onClicked: root.applyRequested()
@@ -80,10 +78,12 @@ ColumnLayout {
     NIconButton {
       Layout.preferredWidth: 42 * Style.uiScaleRatio
       Layout.preferredHeight: 42 * Style.uiScaleRatio
-      visible: !root.singleScreenMode
+      visible: root.showApplyButton && !root.singleScreenMode
       enabled: root.mainInstance?.engineAvailable ?? false
-      icon: root.applyTargetExpanded ? "chevron-up" : "chevron-down"
-      tooltipText: pluginApi?.tr("panel.applyTarget")
+      icon: "device-desktop"
+      tooltipText: root.applyAllDisplays
+        ? pluginApi?.tr("panel.targetAllDisplays")
+        : pluginApi?.tr("panel.targetSingleDisplay", { screen: root.selectedScreenName })
       onClicked: root.applyTargetExpandedRequested(!root.applyTargetExpanded)
     }
   }
@@ -236,6 +236,7 @@ ColumnLayout {
     onToggled: checked => root.applyWallpaperColorsOnApplyRequested(checked)
   }
 
+  // Optional extra property editor for wallpapers that expose editable values.
   ColumnLayout {
     Layout.fillWidth: true
     visible: root.extraPropertiesEditorEnabled
@@ -247,18 +248,12 @@ ColumnLayout {
       Layout.bottomMargin: Style.marginM
     }
 
-    WallpaperPropertiesEditor {
+    PropertiesEditor {
       pluginApi: root.pluginApi
       loadingWallpaperProperties: root.loadingWallpaperProperties
       wallpaperPropertyError: root.wallpaperPropertyError
       wallpaperPropertyDefinitions: root.wallpaperPropertyDefinitions
-      propertyValueFor: root.propertyValueFor
-      numberOr: root.numberOr
-      formatSliderValue: root.formatSliderValue
-      comboChoicesFor: root.comboChoicesFor
-      ensureColorValue: root.ensureColorValue
-      serializePropertyValue: root.serializePropertyValue
-      setPropertyValue: root.setPropertyValue
+      propertyEditorApi: root.propertyEditorApi
     }
   }
 }

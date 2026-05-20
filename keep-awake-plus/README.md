@@ -35,8 +35,9 @@ Required runtime tools: `bash`, `coreutils`, `procps`, `util-linux`,
 `systemd`, `jq`. Optional: `glib` (for UPower lid checks) and `libnotify`
 (for toasts).
 
-For the Nix flavor — packaged with a thermal-guard service and integrated
-into a Hyprland setup — see <https://github.com/noamsto/nix-config>.
+For a NixOS / Home Manager wiring — including an optional thermal-guard
+systemd user service that force-suspends if the laptop overheats while a
+session is active — see [`nix/`](nix/).
 
 ## Settings
 
