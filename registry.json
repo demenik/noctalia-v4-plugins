@@ -106,6 +106,24 @@
       "lastUpdated": "2026-04-25T13:10:34+02:00"
     },
     {
+      "id": "battery-monitor-plus",
+      "name": "Battery Monitor Plus",
+      "version": "1.0.0",
+      "official": false,
+      "author": "krteke",
+      "description": "Extended battery monitor with current power draw, remaining time, battery health, and current power profile.",
+      "repository": "https://github.com/noctalia-dev/noctalia-plugins",
+      "minNoctaliaVersion": "4.6.6",
+      "license": "MIT",
+      "tags": [
+        "Bar",
+        "Panel",
+        "Indicator",
+        "System"
+      ],
+      "lastUpdated": "2026-05-09T09:04:16+08:00"
+    },
+    {
       "id": "battery-threshold",
       "name": "Battery Threshold Control",
       "version": "1.2.4",
