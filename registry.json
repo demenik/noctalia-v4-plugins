@@ -354,7 +354,7 @@
     {
       "id": "daily-wallpaper",
       "name": "Daily Wallpaper",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "official": false,
       "author": "DigitallyRefined",
       "description": "Fetches a new daily wallpaper from Bing or NASA",
@@ -366,7 +366,7 @@
         "Fun",
         "Utility"
       ],
-      "lastUpdated": "2026-04-21T17:31:45+02:00"
+      "lastUpdated": "2026-05-25T15:43:49+01:00"
     },
     {
       "id": "deskvis",
