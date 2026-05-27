@@ -22,7 +22,11 @@
   },
   "metadata": {
     "defaultSettings": {
-      "refreshInterval": 5000
+      "refreshInterval": 5000,
+      "iconColor": "none",
+      "statusState": "all",
+      "activeColor": "success",
+      "inactiveColor": "error"
     }
   }
 }
