@@ -1,11 +1,22 @@
 {
   "settings": {
+    "active_color_description": "Color of the status indicator when active (running)",
+    "active_color_label": "Active Indicator Color",
     "current_value": "Wybrano: {value} ms",
     "default_network_description": "Domyślna sieć do użycia podczas uruchamiania obrazów",
     "default_network_label": "Domyślna Sieć",
     "general": "Ogólne",
+    "icon_color_description": "Change the color of the Bar widget icon",
+    "icon_color_label": "Icon Color",
+    "inactive_color_description": "Color of the status indicator when inactive (stopped)",
+    "inactive_color_label": "Inactive Indicator Color",
     "refresh_interval_description": "Jak często wtyczka sprawdza zmiany stanu kontenera",
     "refresh_interval_label": "Interwał odświeżania",
+    "status_state_always": "Always show",
+    "status_state_description": "Choose how to display the status indicator dot",
+    "status_state_hidden": "Hide completely",
+    "status_state_label": "Status State",
+    "status_state_running_only": "Show when running",
     "title": "Ustawienia Menedżera Kontenerów"
   },
   "tooltip": {
