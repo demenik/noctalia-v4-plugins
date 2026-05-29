@@ -5,7 +5,7 @@
     "status_discharging": "In scarica",
     "status_full": "Carica",
     "status_unknown": "Sconosciuto",
-    "time_to_full": "Tempo al completamento: ",
-    "remaining": "Rimanente: "
+    "time_to_full": "Tempo al completamento: {time}",
+    "remaining": "Rimanente: {time}"
   }
 }

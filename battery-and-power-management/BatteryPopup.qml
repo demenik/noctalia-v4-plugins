@@ -43,7 +43,7 @@ Item {
 
             RowLayout {
                 id: panelContent
-                anchors.centerIn: parent
+                anchors.fill: parent
                 anchors.margins: Style.marginL
                 spacing: Style.marginL
 
@@ -51,6 +51,8 @@ Item {
                     spacing: Style.marginS
                     Layout.alignment: Qt.AlignVCenter
                     Layout.fillWidth: false
+                    Layout.leftMargin: Style.marginS * 2
+                    Layout.rightMargin: Style.marginS
 
                     NIcon {
                         icon: (root.mainWidget?.batStatus === pluginApi?.tr("battery.status_charging") || root.mainWidget?.batStatus === pluginApi?.tr("battery.status_full")) ? "battery-charging" : "battery-4"
@@ -85,17 +87,26 @@ Item {
                         font.weight: Font.Bold
                         pointSize: Style.fontSizeS
                         color: Color.mOnSurface
+                        Layout.fillWidth: true
                     }
 
                     NText {
                         text: {
-                            if (!root.mainWidget) return "...";
-                            if (root.mainWidget.batStatus === pluginApi?.tr("battery.status_charging")) return pluginApi?.tr("battery.time_to_full") + root.mainWidget.timeRemaining;
-                            else if (root.mainWidget.batStatus === pluginApi?.tr("battery.status_discharging")) return pluginApi?.tr("battery.remaining") + root.mainWidget.timeRemaining;
-                            else return root.mainWidget.wattNum.toFixed(1) + " W";
+                            if (!root.mainWidget) {
+                                return "...";
+                            }
+                            if (root.mainWidget.batStatus === pluginApi?.tr("battery.status_charging")) {
+                                return pluginApi?.tr("battery.time_to_full", { time: root.mainWidget.timeRemaining });
+                            } else if (root.mainWidget.batStatus === pluginApi?.tr("battery.status_discharging")) {
+                                return pluginApi?.tr("battery.remaining", { time: root.mainWidget.timeRemaining });
+                            } else {
+                                return root.mainWidget.wattNum.toFixed(1) + " W";
+                            }
                         }
                         pointSize: Style.fontSizeXS
                         color: Color.mOnSurfaceVariant
+                        Layout.fillWidth: true
+                        elide: Text.ElideNone
                     }
                 }
             }

@@ -84,7 +84,9 @@ Item {
     Process {
         id: thresholdSetter
         onExited: (code) => {
-            if (code !== 0) console.warn("Error writing battery threshold.");
+            if (code !== 0) {
+                Logger.e("BatteryAndPowerManagement", "Error writing battery threshold.");
+            }
         }
     }
 

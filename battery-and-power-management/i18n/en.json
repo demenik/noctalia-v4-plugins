@@ -5,7 +5,7 @@
     "status_discharging": "Discharging",
     "status_full": "Full",
     "status_unknown": "Unknown",
-    "time_to_full": "Time to full: ",
-    "remaining": "Remaining: "
+    "time_to_full": "Time to full: {time}",
+    "remaining": "Remaining: {time}"
   }
 }
