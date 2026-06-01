@@ -17,6 +17,25 @@
       "lastUpdated": "2026-02-04T23:08:01-07:00"
     },
     {
+      "id": "agent-session-status",
+      "name": "Agent Session Status",
+      "version": "1.0.0",
+      "official": false,
+      "author": "nzlov",
+      "description": "Runs a local MCP HTTP service for agents to report session status and shows active sessions in the bar.",
+      "repository": "https://github.com/noctalia-dev/noctalia-plugins",
+      "minNoctaliaVersion": "4.6.6",
+      "license": "MIT",
+      "tags": [
+        "Bar",
+        "Panel",
+        "Development",
+        "Indicator",
+        "AI"
+      ],
+      "lastUpdated": "2026-05-11T13:17:35+08:00"
+    },
+    {
       "id": "air-quality",
       "name": "Air Quality",
       "version": "1.1.2",
