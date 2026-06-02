@@ -15,6 +15,13 @@ Item {
   // stored 1-based (1 = port 0), converted on use
   readonly property int displayIndex: (cfg.displayIndex ?? defaults.displayIndex ?? 1) - 1
 
+  Process {
+    id: nvibrantProcess
+    stdout: StdioCollector {}
+    stderr: StdioCollector {}
+    onExited: (code) => Logger.i("NVibrant", "exited: " + code)
+  }
+
   function buildCmd(value) {
     var args = ["/usr/sbin/nvibrant"]
     for (var i = 0; i < root.displayIndex; i++)
@@ -26,18 +33,17 @@ Item {
   function applyVibrance(value) {
     var cmd = buildCmd(value)
     Logger.i("NVibrant", "Running: " + cmd.join(" "))
-    Quickshell.exec(cmd)
+    nvibrantProcess.running = false
+    nvibrantProcess.command = cmd
+    Qt.callLater(function() { nvibrantProcess.running = true })
   }
-
-  // Reactively apply vibrance when any relevant property changes
-  onVibrantEnabledChanged: applyVibrance(vibrantEnabled ? vibranceValue : 0)
-  onVibranceValueChanged: if (vibrantEnabled) applyVibrance(vibranceValue)
-  onDisplayIndexChanged: applyVibrance(vibrantEnabled ? vibranceValue : 0)
 
   function toggle() {
     if (pluginApi) {
-      pluginApi.pluginSettings.enabled = !vibrantEnabled
+      var newEnabled = !vibrantEnabled
+      pluginApi.pluginSettings.enabled = newEnabled
       pluginApi.saveSettings()
+      applyVibrance(newEnabled ? vibranceValue : 0)
     }
   }
 
