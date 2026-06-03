@@ -41,23 +41,23 @@ ColumnLayout {
     spacing: Style.marginS
 
     NLabel {
-      label: pluginApi?.tr("settings.display-count")
-      description: pluginApi?.tr("settings.display-count-desc")
+      label: pluginApi?.tr("settings.display-index")
+      description: pluginApi?.tr("settings.display-index-desc")
     }
 
     NSpinBox {
-      id: displayCountSpinBox
+      id: displayIndexSpinBox
       from: 1
       to: 8
       stepSize: 1
-      value: root.cfg.displayCount ?? root.defaults.displayCount ?? 1
+      value: root.cfg.displayIndex ?? root.defaults.displayIndex ?? 1
     }
   }
 
   function saveSettings() {
     if (!pluginApi) return
     pluginApi.pluginSettings.vibranceValue = vibranceSpinBox.value
-    pluginApi.pluginSettings.displayCount  = displayCountSpinBox.value
+    pluginApi.pluginSettings.displayIndex  = displayIndexSpinBox.value
     pluginApi.saveSettings()
   }
 }

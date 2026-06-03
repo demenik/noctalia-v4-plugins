@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import qs.Commons
 import qs.Widgets
 import qs.Services.UI
@@ -21,7 +20,7 @@ Item {
 
   readonly property bool vibrantEnabled: cfg.enabled ?? defaults.enabled ?? false
   readonly property int vibranceValue: cfg.vibranceValue ?? defaults.vibranceValue ?? 512
-  readonly property int displayCount: cfg.displayCount ?? defaults.displayCount ?? 1
+  readonly property int displayIndex: (cfg.displayIndex ?? defaults.displayIndex ?? 1) - 1
 
   readonly property real contentWidth: Style.capsuleHeight
   readonly property real contentHeight: Style.capsuleHeight
@@ -29,10 +28,24 @@ Item {
   implicitWidth: contentWidth
   implicitHeight: contentHeight
 
+  function buildCmd(value) {
+    var parts = ["nvibrant"]
+    for (var i = 0; i < root.displayIndex; i++)
+      parts.push("0")
+    parts.push(value.toString())
+    return ["bash", "-lc", parts.join(" ")]
+  }
+
+  function applyVibrance(value) {
+    Quickshell.execDetached(buildCmd(value))
+  }
+
   function toggle() {
     if (pluginApi) {
-      pluginApi.pluginSettings.enabled = !vibrantEnabled
+      var newEnabled = !vibrantEnabled
+      pluginApi.pluginSettings.enabled = newEnabled
       pluginApi.saveSettings()
+      applyVibrance(newEnabled ? vibranceValue : 0)
     }
   }
 
@@ -61,8 +74,8 @@ Item {
     id: contextMenu
     model: [
       {
-        "label": root.vibrantEnabled 
-          ? pluginApi?.tr("panel.disable-vibrance") 
+        "label": root.vibrantEnabled
+          ? pluginApi?.tr("panel.disable-vibrance")
           : pluginApi?.tr("panel.enable-vibrance"),
         "action": "toggle",
         "icon": root.vibrantEnabled ? "eye-off" : "eye"

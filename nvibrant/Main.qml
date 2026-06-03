@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.Commons
 
 Item {
@@ -12,30 +11,27 @@ Item {
 
   readonly property bool vibrantEnabled: cfg.enabled ?? defaults.enabled ?? false
   readonly property int vibranceValue: cfg.vibranceValue ?? defaults.vibranceValue ?? 512
-  readonly property int displayCount: cfg.displayCount ?? defaults.displayCount ?? 1
+  // stored 1-based (1 = port 0), converted on use
+  readonly property int displayIndex: (cfg.displayIndex ?? defaults.displayIndex ?? 1) - 1
 
   function buildCmd(value) {
-    var args = ["/usr/sbin/nvibrant"]
-    for (var i = 0; i < root.displayCount; i++)
-      args.push(value.toString())
-    return args
+    var parts = ["nvibrant"]
+    for (var i = 0; i < root.displayIndex; i++)
+      parts.push("0")
+    parts.push(value.toString())
+    return ["bash", "-lc", parts.join(" ")]
   }
 
   function applyVibrance(value) {
-    var cmd = buildCmd(value)
-    Logger.i("NVibrant", "Running: " + cmd.join(" "))
-    Quickshell.exec(cmd)
+    Quickshell.execDetached(buildCmd(value))
   }
-
-  // Reactively apply vibrance when any relevant property changes
-  onVibrantEnabledChanged: applyVibrance(vibrantEnabled ? vibranceValue : 0)
-  onVibranceValueChanged: if (vibrantEnabled) applyVibrance(vibranceValue)
-  onDisplayCountChanged: applyVibrance(vibrantEnabled ? vibranceValue : 0)
 
   function toggle() {
     if (pluginApi) {
-      pluginApi.pluginSettings.enabled = !vibrantEnabled
+      var newEnabled = !vibrantEnabled
+      pluginApi.pluginSettings.enabled = newEnabled
       pluginApi.saveSettings()
+      applyVibrance(newEnabled ? vibranceValue : 0)
     }
   }
 
