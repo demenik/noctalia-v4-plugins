@@ -111,7 +111,8 @@
   },
   "toast": {
     "refreshing": "Refreshing Habitica",
-    "configure": "Configure Habitica credentials in plugin settings"
+    "configure": "Configure Habitica credentials in plugin settings",
+    "taskScored": "Habitica task scored"
   },
   "tooltip": {
     "configure": "Habitica\nConfigure User ID and API Token",
@@ -130,5 +131,10 @@
     "updatedMinutesSuffix": "m ago",
     "updatedHoursSuffix": "h ago",
     "actionsHint": "Right-click for actions"
+  },
+  "error": {
+    "configure": "Configure your Habitica User ID and API Token in settings.",
+    "network": "Habitica request failed. Check your network connection.",
+    "request": "Habitica request failed."
   }
 }

@@ -38,7 +38,8 @@
       "colorizationEnabled": false,
       "colorizationIcon": "Primary",
       "colorizationBadge": "Error",
-      "colorizationBadgeText": "Primary"
+      "colorizationBadgeText": "Primary",
+      "_habiticaCache": ""
     }
   }
 }

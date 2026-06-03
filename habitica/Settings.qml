@@ -9,21 +9,24 @@ ColumnLayout {
 
   property var pluginApi: null
 
-  property string editHabiticaUserId: ""
-  property string editHabiticaApiToken: ""
-  property int editRefreshInterval: 300
-  property int editMaxDailies: 8
-  property int editMaxTodos: 8
-  property int editMaxHabits: 8
-  property bool editShowHabits: false
-  property bool editShowChecklistItems: false
-  property bool editEnableTagFilter: false
-  property string editSelectedTagId: ""
-  property bool editShowNotificationBadge: true
-  property bool editColorizationEnabled: false
-  property string editColorizationIcon: "Primary"
-  property string editColorizationBadge: "Error"
-  property string editColorizationBadgeText: "Primary"
+  readonly property var cfg: pluginApi?.pluginSettings || ({})
+  readonly property var defaults: pluginApi?.manifest?.metadata?.defaultSettings || ({})
+
+  property string editHabiticaUserId: cfg.habiticaUserId ?? defaults.habiticaUserId ?? ""
+  property string editHabiticaApiToken: cfg.habiticaApiToken ?? defaults.habiticaApiToken ?? ""
+  property int editRefreshInterval: cfg.refreshInterval ?? defaults.refreshInterval ?? 300
+  property int editMaxDailies: cfg.maxDailies ?? defaults.maxDailies ?? 8
+  property int editMaxTodos: cfg.maxTodos ?? defaults.maxTodos ?? 8
+  property int editMaxHabits: cfg.maxHabits ?? defaults.maxHabits ?? 8
+  property bool editShowHabits: cfg.showHabits ?? defaults.showHabits ?? false
+  property bool editShowChecklistItems: cfg.showChecklistItems ?? defaults.showChecklistItems ?? false
+  property bool editEnableTagFilter: cfg.enableTagFilter ?? defaults.enableTagFilter ?? false
+  property string editSelectedTagId: cfg.selectedTagId ?? defaults.selectedTagId ?? ""
+  property bool editShowNotificationBadge: cfg.showNotificationBadge ?? defaults.showNotificationBadge ?? true
+  property bool editColorizationEnabled: cfg.colorizationEnabled ?? defaults.colorizationEnabled ?? false
+  property string editColorizationIcon: cfg.colorizationIcon ?? defaults.colorizationIcon ?? "Primary"
+  property string editColorizationBadge: cfg.colorizationBadge ?? defaults.colorizationBadge ?? "Error"
+  property string editColorizationBadgeText: cfg.colorizationBadgeText ?? defaults.colorizationBadgeText ?? "Primary"
 
   spacing: Style.marginM
 
@@ -302,26 +305,5 @@ ColumnLayout {
     pluginApi.saveSettings()
     Logger.i("Habitica", "Settings saved")
     ToastService.showNotice(pluginApi?.tr("settings.saved"))
-  }
-
-  Component.onCompleted: {
-    var settings = pluginApi?.pluginSettings
-    var defaults = pluginApi?.manifest?.metadata?.defaultSettings
-
-    root.editHabiticaUserId = settings?.habiticaUserId || defaults?.habiticaUserId || ""
-    root.editHabiticaApiToken = settings?.habiticaApiToken || defaults?.habiticaApiToken || ""
-    root.editRefreshInterval = settings?.refreshInterval || defaults?.refreshInterval || 300
-    root.editMaxDailies = settings?.maxDailies || defaults?.maxDailies || 8
-    root.editMaxTodos = settings?.maxTodos || defaults?.maxTodos || 8
-    root.editMaxHabits = settings?.maxHabits || defaults?.maxHabits || 8
-    root.editShowHabits = settings?.showHabits ?? defaults?.showHabits ?? false
-    root.editShowChecklistItems = settings?.showChecklistItems ?? defaults?.showChecklistItems ?? false
-    root.editEnableTagFilter = settings?.enableTagFilter ?? defaults?.enableTagFilter ?? false
-    root.editSelectedTagId = settings?.selectedTagId || defaults?.selectedTagId || ""
-    root.editShowNotificationBadge = settings?.showNotificationBadge ?? defaults?.showNotificationBadge ?? true
-    root.editColorizationEnabled = settings?.colorizationEnabled ?? defaults?.colorizationEnabled ?? false
-    root.editColorizationIcon = settings?.colorizationIcon || defaults?.colorizationIcon || "Primary"
-    root.editColorizationBadge = settings?.colorizationBadge || defaults?.colorizationBadge || "Error"
-    root.editColorizationBadgeText = settings?.colorizationBadgeText || defaults?.colorizationBadgeText || "Primary"
   }
 }

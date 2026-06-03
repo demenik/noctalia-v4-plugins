@@ -9,22 +9,20 @@ Item {
 
   property var pluginApi: null
 
-  readonly property bool debugMode: Quickshell.env("NOCTALIA_DEBUG") === "1"
   readonly property string apiBaseUrl: "https://habitica.com/api/v3"
-  readonly property string userId: pluginApi?.pluginSettings?.habiticaUserId || ""
-  readonly property string apiToken: pluginApi?.pluginSettings?.habiticaApiToken || ""
+  readonly property var cfg: pluginApi?.pluginSettings || ({})
+  readonly property var defaults: pluginApi?.manifest?.metadata?.defaultSettings || ({})
+  readonly property string userId: cfg.habiticaUserId ?? defaults.habiticaUserId ?? ""
+  readonly property string apiToken: cfg.habiticaApiToken ?? defaults.habiticaApiToken ?? ""
   readonly property bool isConfigured: userId.trim() !== "" && apiToken.trim() !== ""
-  readonly property int refreshInterval: Math.max(60, pluginApi?.pluginSettings?.refreshInterval || 300)
-  readonly property int maxDailies: pluginApi?.pluginSettings?.maxDailies || 8
-  readonly property int maxTodos: pluginApi?.pluginSettings?.maxTodos || 8
-  readonly property int maxHabits: pluginApi?.pluginSettings?.maxHabits || 8
-  readonly property bool showHabits: pluginApi?.pluginSettings?.showHabits ?? false
-  readonly property bool showChecklistItems: pluginApi?.pluginSettings?.showChecklistItems ?? false
-  readonly property bool enableTagFilter: pluginApi?.pluginSettings?.enableTagFilter ?? false
-  readonly property string selectedTagId: pluginApi?.pluginSettings?.selectedTagId || ""
-
-  readonly property string cacheDir: pluginApi?.pluginDir ? pluginApi.pluginDir + "/cache" : ""
-  readonly property string cachePath: cacheDir + "/habitica.json"
+  readonly property int refreshInterval: Math.max(60, cfg.refreshInterval ?? defaults.refreshInterval ?? 300)
+  readonly property int maxDailies: cfg.maxDailies ?? defaults.maxDailies ?? 8
+  readonly property int maxTodos: cfg.maxTodos ?? defaults.maxTodos ?? 8
+  readonly property int maxHabits: cfg.maxHabits ?? defaults.maxHabits ?? 8
+  readonly property bool showHabits: cfg.showHabits ?? defaults.showHabits ?? false
+  readonly property bool showChecklistItems: cfg.showChecklistItems ?? defaults.showChecklistItems ?? false
+  readonly property bool enableTagFilter: cfg.enableTagFilter ?? defaults.enableTagFilter ?? false
+  readonly property string selectedTagId: cfg.selectedTagId ?? defaults.selectedTagId ?? ""
 
   property var user: ({})
   property var stats: ({})
@@ -56,9 +54,6 @@ Item {
   readonly property int avatarRefreshInterval: 3600
   property int avatarLastFetchTimestamp: 0
 
-  function logDebug(msg) {
-    if (debugMode) Logger.d("Habitica", msg)
-  }
 
   function nowSeconds() {
     return Math.floor(Date.now() / 1000)
@@ -177,7 +172,7 @@ Item {
     if (!isConfigured) {
       root.isLoading = false
       root.hasError = true
-      root.errorMessage = "Configure your Habitica User ID and API Token in settings."
+      root.errorMessage = pluginApi?.tr("error.configure")
       return
     }
 
@@ -203,7 +198,7 @@ Item {
     }
 
     if (!force && lastFetchTimestamp > 0 && nowSeconds() - lastFetchTimestamp < refreshInterval) {
-      logDebug("Skipping refresh; cache is fresh")
+      Logger.d("Habitica", "Skipping refresh; cache is fresh")
       return
     }
 
@@ -244,7 +239,7 @@ Item {
       root.isLoading = false
       root.isScoring = false
       root.hasError = true
-      root.errorMessage = "Habitica request failed. Check your network connection."
+      root.errorMessage = pluginApi?.tr("error.network")
       return
     }
 
@@ -253,7 +248,7 @@ Item {
       root.isLoading = false
       root.isScoring = false
       root.hasError = true
-      root.errorMessage = response.message || response.error || "Habitica request failed."
+      root.errorMessage = response.message || response.error || pluginApi?.tr("error.request")
       return
     }
 
@@ -298,7 +293,7 @@ Item {
       if (response.data) {
         root.stats = response.data
       }
-      ToastService.showNotice("Habitica task scored")
+      ToastService.showNotice(pluginApi?.tr("toast.taskScored"))
       root.isLoading = true
       root.hasError = false
       root.errorMessage = ""
@@ -332,9 +327,9 @@ Item {
 
   function loadFromCache() {
     try {
-      var content = cacheFile.text()
-      if (!content || content.trim() === "") return
-      var cached = JSON.parse(content)
+      var content = cfg._habiticaCache || ""
+      if (!content) return
+      var cached = typeof content === "string" ? JSON.parse(content) : content
       root.user = cached.user || ({})
       root.stats = cached.stats || root.user.stats || ({})
       root.dailies = cached.dailies || []
@@ -343,16 +338,16 @@ Item {
       root.tags = cached.tags || []
       root.lastFetchTimestamp = cached.timestamp || 0
       root.avatarLastFetchTimestamp = cached.avatarTimestamp || 0
-      logDebug("Loaded Habitica cache")
+      Logger.d("Habitica", "Loaded Habitica cache")
     } catch (e) {
       Logger.w("Habitica", "Failed to load cache: " + e)
     }
   }
 
   function saveToCache() {
-    if (!cacheDir || !cachePath) return
+    if (!pluginApi?.pluginSettings) return
     try {
-      cacheFile.setText(JSON.stringify({
+      pluginApi.pluginSettings._habiticaCache = JSON.stringify({
         user: root.user,
         stats: root.stats,
         dailies: root.dailies,
@@ -361,39 +356,13 @@ Item {
         tags: root.tags,
         timestamp: root.lastFetchTimestamp,
         avatarTimestamp: root.avatarLastFetchTimestamp
-      }, null, 2))
+      })
+      pluginApi.saveSettings()
     } catch (e) {
       Logger.w("Habitica", "Failed to save cache: " + e)
     }
   }
 
-  FileView {
-    id: cacheFile
-    path: root.cachePath
-    watchChanges: false
-
-    onLoaded: {
-      root.loadFromCache()
-      root.fetchAll(false)
-    }
-
-    onLoadFailed: function(error) {
-      root.fetchAll(true)
-    }
-  }
-
-  Process {
-    id: mkdirProcess
-    command: root.cacheDir ? ["mkdir", "-p", root.cacheDir] : ["true"]
-
-    onExited: {
-      if (root.cachePath) {
-        cacheFile.reload()
-      } else {
-        root.fetchAll(true)
-      }
-    }
-  }
 
   Process {
     id: apiProcess
@@ -404,7 +373,7 @@ Item {
     onExited: function(exitCode, exitStatus) {
       var stdout = String(apiProcess.stdout.text || "")
       var stderr = String(apiProcess.stderr.text || "").trim()
-      if (stderr.length > 0) root.logDebug(stderr)
+      if (stderr.length > 0) Logger.d("Habitica", stderr)
       root.handleApiResponse(root._currentRequest, stdout, exitCode)
     }
   }
@@ -431,17 +400,12 @@ Item {
   }
 
   onIsConfiguredChanged: {
-    if (isConfigured) {
-      mkdirProcess.running = true
-    }
+    if (isConfigured) fetchAll(false)
   }
 
   Component.onCompleted: {
-    if (cacheDir) {
-      mkdirProcess.running = true
-    } else {
-      fetchAll(true)
-    }
+    loadFromCache()
+    fetchAll(false)
   }
 
   IpcHandler {
