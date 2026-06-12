@@ -1,7 +1,7 @@
 {
   "id": "battery-and-power-management",
   "name": "Battery & Power Management Plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minNoctaliaVersion": "4.0.0",
   "author": "Piero-93",
   "license": "MIT",
