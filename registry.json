@@ -391,7 +391,7 @@
     {
       "id": "daily-wallpaper",
       "name": "Daily Wallpaper",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "official": false,
       "author": "DigitallyRefined",
       "description": "Fetches a new daily wallpaper from Bing or NASA",
@@ -403,7 +403,7 @@
         "Fun",
         "Utility"
       ],
-      "lastUpdated": "2026-05-25T15:43:49+01:00"
+      "lastUpdated": "2026-06-12T23:02:02+02:00"
     },
     {
       "id": "deskvis",
@@ -525,7 +525,7 @@
     {
       "id": "giphy-search",
       "name": "Giphy Search",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "official": false,
       "author": "Sergio Mendolia",
       "description": "Search for GIFs on Giphy from the Launcher.",
@@ -537,7 +537,7 @@
         "Utility",
         "Fun"
       ],
-      "lastUpdated": "2026-04-02T23:32:45+02:00"
+      "lastUpdated": "2026-06-12T23:11:05+02:00"
     },
     {
       "id": "git-companion",
@@ -596,7 +596,7 @@
     {
       "id": "hassio",
       "name": "Home Assistant",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "official": false,
       "author": "Pozzoo",
       "description": "Monitor and control Home Assistant entities from the bar. Requires qt6-websockets.",
@@ -608,7 +608,7 @@
         "Panel",
         "Utility"
       ],
-      "lastUpdated": "2026-05-10T15:26:46+03:00"
+      "lastUpdated": "2026-06-12T23:19:35+02:00"
     },
     {
       "id": "hello-world",
