@@ -18,7 +18,8 @@
             "colorizeByStatus": true,
             "allowPopupOpening": true,
             "colorLevel0": null,
-            "colorActive": null
+            "colorActive": null,
+            "colorAuto": null
         }
     }
 }

@@ -8,7 +8,9 @@
     "color-level0": "Fan off (Level 0)",
     "color-level0-desc": "Capsule color when the fan is off (Level 0)",
     "color-active": "Fan active",
-    "color-active-desc": "Capsule color when the fan runs at a forced speed (every mode except automatic and off)"
+    "color-active-desc": "Capsule color when the fan runs at a forced speed (every mode except automatic and off)",
+    "color-auto": "Automatic mode",
+    "color-auto-desc": "Optional capsule color for automatic mode (leave on the neutral option to match the bar)"
   },
   "popup": {
     "title": "Fan speed manual override",

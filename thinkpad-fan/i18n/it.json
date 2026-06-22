@@ -8,7 +8,9 @@
     "color-level0": "Ventola spenta (Livello 0)",
     "color-level0-desc": "Colore della capsula quando la ventola è spenta (Livello 0)",
     "color-active": "Ventola attiva",
-    "color-active-desc": "Colore della capsula quando la ventola gira a una velocità forzata (tutte le modalità tranne automatica e spenta)"
+    "color-active-desc": "Colore della capsula quando la ventola gira a una velocità forzata (tutte le modalità tranne automatica e spenta)",
+    "color-auto": "Modalità automatica",
+    "color-auto-desc": "Colore opzionale della capsula per la modalità automatica (lascia l'opzione neutra per seguire la barra)"
   },
   "popup": {
     "title": "Controllo manuale della ventola",

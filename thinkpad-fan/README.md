@@ -9,9 +9,9 @@ A resilient system utility plugin designed for the **Noctalia** desktop shell en
 *   **Thermal Zone Inspector**: Contextual diagnostic popup panel tracking active primary sensor clusters.
 *   **Stateful Micro-Pill Alerts**: The bar capsule color-shifts based on the current fan mode (when *Dynamic coloring* is enabled):
     *   **Fan off (`level 0`)**: uses the configurable *Fan off* color (defaults to the theme `mError`).
-    *   **Automatic mode**: stays neutral, matching the rest of the bar.
+    *   **Automatic mode**: neutral by default, matching the rest of the bar — optionally a custom *Automatic mode* color can be chosen.
     *   **Any forced speed** (levels `1`–`7`, full speed, …): uses the configurable *Fan active* color (defaults to the theme `mPrimary`).
-*   **Configurable Colors**: Both the *Fan off* and *Fan active* colors are pickable from the theme palette in the plugin settings.
+*   **Configurable Colors**: The *Fan off*, *Fan active* and *Automatic mode* colors are pickable from the theme palette in the plugin settings — each can also be set to **neutral** (no color) to match the bar.
 
 ## Settings
 --------
@@ -21,6 +21,8 @@ Open the plugin settings (right-click the widget → **Widget Settings**) to con
 *   **Dynamic coloring**: toggle the mode-based capsule coloring on/off. When off, the capsule keeps the default bar color.
     *   **Fan off color**: palette color used when the fan is stopped (`level 0`).
     *   **Fan active color**: palette color used whenever the fan runs at a forced speed (every mode except automatic and off).
+    *   **Automatic mode color**: palette color for automatic mode (neutral by default).
+    *   Each of the three pickers includes a **neutral** (no-color) option as the first swatch — choose it to keep that mode matching the bar.
 *   **Fan speed manual override**: when enabled, left-clicking the widget opens the manual fan control panel.
 
 ## Prerequisites

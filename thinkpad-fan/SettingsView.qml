@@ -30,6 +30,12 @@ ColumnLayout {
         pluginApi?.manifest?.metadata?.defaultSettings?.colorActive ??
         Color.mPrimary
 
+    // Empty = unset → automatic mode stays neutral
+    property string editColorAuto:
+        pluginApi?.pluginSettings?.colorAuto ??
+        pluginApi?.manifest?.metadata?.defaultSettings?.colorAuto ??
+        ""
+
     // ===== SAVE =====
     function saveSettings() {
         if (!pluginApi) return
@@ -37,6 +43,7 @@ ColumnLayout {
         pluginApi.pluginSettings.allowPopupOpening = root.editAllowPopupOpening
         pluginApi.pluginSettings.colorActive = root.editColorActive
         pluginApi.pluginSettings.colorLevel0 = root.editColorLevel0
+        pluginApi.pluginSettings.colorAuto = root.editColorAuto
         pluginApi.saveSettings()
     }
 
@@ -52,6 +59,56 @@ ColumnLayout {
         Color.mPrimary, Color.mSecondary, Color.mTertiary, Color.mError,
         Color.mSurface, Color.mSurfaceVariant, Color.mOutline
     ]
+
+    // Reusable palette picker: a "neutral" (no-color) swatch followed by the theme palette.
+    // `selected` is the current value (empty = neutral); `picked` fires with the chosen value.
+    component ColorSwatchRow: RowLayout {
+        id: swatchRow
+        property string selected: ""
+        signal picked(string value)
+        spacing: Style.marginS
+
+        // Neutral / no-color option
+        Rectangle {
+            width: root.swatchSize
+            height: root.swatchSize
+            radius: root.swatchSize / 2
+            color: Style.capsuleColor
+            border.color: !swatchRow.selected ? Color.mOnSurface : Color.mOutline
+            border.width: !swatchRow.selected ? root.swatchBorderSelected : root.swatchBorderDefault
+
+            NIcon {
+                anchors.centerIn: parent
+                icon: "close"
+                color: Color.mOnSurfaceVariant
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: swatchRow.picked("")
+            }
+        }
+
+        Repeater {
+            model: root.noctaliaPalette
+
+            Rectangle {
+                width: root.swatchSize
+                height: root.swatchSize
+                radius: root.swatchSize / 2
+                color: modelData
+                border.color: (swatchRow.selected && Qt.colorEqual(swatchRow.selected, modelData)) ? Color.mOnSurface : Color.mOutline
+                border.width: (swatchRow.selected && Qt.colorEqual(swatchRow.selected, modelData)) ? root.swatchBorderSelected : root.swatchBorderDefault
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: swatchRow.picked(String(modelData))
+                }
+            }
+        }
+    }
 
     // Option 1: Dynamic coloring based on fan status
     NToggle {
@@ -86,30 +143,11 @@ ColumnLayout {
                 color: Color.mOnSurfaceVariant
             }
 
-            RowLayout {
-                spacing: Style.marginS
-
-                Repeater {
-                    id: level0Color
-                    model: root.noctaliaPalette
-
-                    Rectangle {
-                        width: root.swatchSize
-                        height: root.swatchSize
-                        radius: root.swatchSize / 2
-                        color: modelData
-                        border.color: (root.editColorLevel0 && Qt.colorEqual(root.editColorLevel0, modelData)) ? Color.mOnSurface : Color.mOutline
-                        border.width: (root.editColorLevel0 && Qt.colorEqual(root.editColorLevel0, modelData)) ? root.swatchBorderSelected : root.swatchBorderDefault
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.editColorLevel0 = modelData
-                                root.saveSettings()
-                            }
-                        }
-                    }
+            ColorSwatchRow {
+                selected: root.editColorLevel0
+                onPicked: value => {
+                    root.editColorLevel0 = value
+                    root.saveSettings()
                 }
             }
         }
@@ -132,30 +170,38 @@ ColumnLayout {
                 color: Color.mOnSurfaceVariant
             }
 
-            RowLayout {
-                spacing: Style.marginS
+            ColorSwatchRow {
+                selected: root.editColorActive
+                onPicked: value => {
+                    root.editColorActive = value
+                    root.saveSettings()
+                }
+            }
+        }
 
-                Repeater {
-                    id: activeColor
-                    model: root.noctaliaPalette
+        // Space separator
+        Item { Layout.preferredHeight: Style.marginS }
 
-                    Rectangle {
-                        width: root.swatchSize
-                        height: root.swatchSize
-                        radius: root.swatchSize / 2
-                        color: modelData
-                        border.color: (root.editColorActive && Qt.colorEqual(root.editColorActive, modelData)) ? Color.mOnSurface : Color.mOutline
-                        border.width: (root.editColorActive && Qt.colorEqual(root.editColorActive, modelData)) ? root.swatchBorderSelected : root.swatchBorderDefault
+        // Automatic mode color (optional, neutral by default)
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Style.marginS
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.editColorActive = modelData
-                                root.saveSettings()
-                            }
-                        }
-                    }
+            NText {
+                text: pluginApi?.tr("settings.color-auto")
+                font.weight: Font.Bold
+            }
+            NText {
+                text: pluginApi?.tr("settings.color-auto-desc")
+                font.pointSize: Style.fontSizeS
+                color: Color.mOnSurfaceVariant
+            }
+
+            ColorSwatchRow {
+                selected: root.editColorAuto
+                onPicked: value => {
+                    root.editColorAuto = value
+                    root.saveSettings()
                 }
             }
         }
