@@ -1945,7 +1945,7 @@
     {
       "id": "thinkpad-fan",
       "name": "ThinkPad - Fan & Thermal Control",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "official": false,
       "author": "Piero-93",
       "description": "Monitors system temperatures and provides manual overrides for fan speed profiles via sysfs.",
@@ -1958,7 +1958,7 @@
         "System",
         "Utility"
       ],
-      "lastUpdated": "2026-05-18T14:23:54+02:00"
+      "lastUpdated": "2026-06-22T15:24:48+02:00"
     },
     {
       "id": "timer",
