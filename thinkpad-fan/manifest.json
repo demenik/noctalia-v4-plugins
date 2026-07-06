@@ -1,7 +1,7 @@
 {
     "id": "thinkpad-fan",
     "name": "ThinkPad - Fan & Thermal Control",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "minNoctaliaVersion": "4.0.0",
     "author": "Piero-93",
     "license": "GPLv3",
@@ -15,8 +15,11 @@
     },
     "metadata": {
         "defaultSettings": {
-        "colorizeByStatus": true,
-        "allowPopupOpening": true
+            "colorizeByStatus": true,
+            "allowPopupOpening": true,
+            "colorLevel0": null,
+            "colorActive": null,
+            "colorAuto": null
         }
     }
 }

@@ -23,8 +23,17 @@ Item {
     readonly property real barFontSize: Style.getBarFontSizeForScreen(root.screenName)
     readonly property string fixedFont: Settings.data.ui.fontFixed
 
+    // Special fan level identifiers as reported by /proc/acpi/ibm/fan
+    readonly property string levelAuto: "auto"
+    readonly property string levelOff: "0"
+    readonly property string levelUnknown: "unknown"
+
+    // procfs/sysfs don't emit inotify events — values must be polled
+    readonly property int pollIntervalMs: 2000
+    readonly property int refreshDelayMs: 300
+
     property int fanRpm: 0
-    property string fanLevel: "auto"
+    property string fanLevel: levelAuto
     property int currentTemp: 0
     property bool isInitialized: false
 
@@ -38,6 +47,29 @@ Item {
         pluginApi?.pluginSettings?.allowPopupOpening ??
         pluginApi?.manifest?.metadata?.defaultSettings?.allowPopupOpening ??
         true
+
+    // Per-mode colors. An empty value means "neutral" (match the bar): off and
+    // forced-speed default to a theme color, automatic defaults to neutral.
+    readonly property var rawColorLevel0:
+        pluginApi?.pluginSettings?.colorLevel0 ??
+        pluginApi?.manifest?.metadata?.defaultSettings?.colorLevel0 ??
+        Color.mError
+    readonly property var rawColorActive:
+        pluginApi?.pluginSettings?.colorActive ??
+        pluginApi?.manifest?.metadata?.defaultSettings?.colorActive ??
+        Color.mPrimary
+    readonly property var rawColorAuto:
+        pluginApi?.pluginSettings?.colorAuto ??
+        pluginApi?.manifest?.metadata?.defaultSettings?.colorAuto ??
+        ""
+
+    readonly property bool level0IsNeutral: String(rawColorLevel0).length === 0
+    readonly property bool activeIsNeutral: String(rawColorActive).length === 0
+    readonly property bool autoIsNeutral: String(rawColorAuto).length === 0
+
+    readonly property string colorLevel0: level0IsNeutral ? Style.capsuleColor : rawColorLevel0
+    readonly property string colorActive: activeIsNeutral ? Style.capsuleColor : rawColorActive
+    readonly property string colorAuto: autoIsNeutral ? Style.capsuleColor : rawColorAuto
 
     readonly property real contentWidth: layout.implicitWidth + Style.marginS * 2
     readonly property real contentHeight: capsuleHeight
@@ -62,7 +94,7 @@ Item {
             if (content) {
                 let lines = content.split("\n");
                 let parsedRpm = 0;
-                let parsedLevel = "auto";
+                let parsedLevel = root.levelAuto;
 
                 for (let i = 0; i < lines.length; i++) {
                     let line = lines[i].trim();
@@ -112,7 +144,7 @@ Item {
         }
 
         let cleanLevel = String(targetLevel).replace(/[\r\n\t]/g, "").trim().toLowerCase();
-        if (!cleanLevel || cleanLevel === "unknown") {
+        if (!cleanLevel || cleanLevel === root.levelUnknown) {
             return;
         }
 
@@ -122,11 +154,20 @@ Item {
         fanProcess.running = true;
     }
 
-    Timer { id: refreshTimer; interval: 300; repeat: false; onTriggered: { fanLoader.reload(); tempLoader.reload(); } }
-    // procfs/sysfs don't emit inotify events — polling is required for live values
-    Timer { interval: 2000; running: true; repeat: true; triggeredOnStart: true; onTriggered: { fanLoader.reload(); tempLoader.reload(); } }
+    Timer { id: refreshTimer; interval: root.refreshDelayMs; repeat: false; onTriggered: { fanLoader.reload(); tempLoader.reload(); } }
+    Timer { interval: root.pollIntervalMs; running: true; repeat: true; triggeredOnStart: true; onTriggered: { fanLoader.reload(); tempLoader.reload(); } }
 
-    readonly property bool isCustomActive: root.fanLevel !== "auto" && root.fanLevel !== "0"
+    readonly property bool isCustomActive: root.fanLevel !== root.levelAuto && root.fanLevel !== root.levelOff
+    readonly property bool isOff: root.fanLevel === root.levelOff
+
+    // Resolved color + neutral flag for the currently active fan mode
+    readonly property bool currentIsNeutral:
+        !root.colorizeByStatus
+        || (root.isCustomActive ? root.activeIsNeutral
+            : (root.isOff ? root.level0IsNeutral : root.autoIsNeutral))
+    readonly property string currentColor:
+        root.isCustomActive ? root.colorActive
+        : (root.isOff ? root.colorLevel0 : root.colorAuto)
 
     // ===== NATIVE NOCTALIA CONTEXT MENU =====
     NPopupContextMenu {
@@ -134,7 +175,7 @@ Item {
 
         model: [
             {
-                "label": "Widget Settings",
+                "label": pluginApi?.tr("menu.widget-settings"),
                 "action": "settings",
                 "icon": "settings"
             }
@@ -160,17 +201,8 @@ Item {
         height: root.contentHeight
         radius: Style.radiusL
         
-        color: !root.colorizeByStatus
-            ? Style.capsuleColor
-            : (root.isCustomActive
-                ? Color.mPrimary
-                : (root.fanLevel === "0" ? "#cc241d" : Style.capsuleColor))
-
-        border.color: !root.colorizeByStatus
-            ? Style.capsuleBorderColor
-            : (root.isCustomActive
-                ? Color.mPrimary
-                : (root.fanLevel === "0" ? "#cc241d" : Style.capsuleBorderColor))
+        color: root.currentIsNeutral ? Style.capsuleColor : root.currentColor
+        border.color: root.currentIsNeutral ? Style.capsuleBorderColor : root.currentColor
         border.width: Style.capsuleBorderWidth
 
         RowLayout {
@@ -181,7 +213,7 @@ Item {
             NIcon {
                 id: fanIcon
                 icon: "car-fan"
-                color: root.colorizeByStatus && (root.isCustomActive || root.fanLevel === "0") ? Color.mOnPrimary : Color.mOnSurface
+                color: root.currentIsNeutral ? Color.mOnSurface : Color.mOnPrimary
             }
 
             NText {
@@ -190,7 +222,7 @@ Item {
                 pointSize: barFontSize
                 font.family: root.fixedFont
                 font.weight: Font.Bold
-                color: root.colorizeByStatus && (root.isCustomActive || root.fanLevel === "0") ? Color.mOnPrimary : Color.mOnSurface
+                color: root.currentIsNeutral ? Color.mOnSurface : Color.mOnPrimary
             }
         }
     }
