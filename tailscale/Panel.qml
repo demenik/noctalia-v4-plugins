@@ -351,7 +351,47 @@ Item {
     filteredPeerList.length === 0
 
   property real contentPreferredWidth: panelReady ? 400 * Style.uiScaleRatio : 0
-  property real contentPreferredHeight: panelReady ? Math.min(620, 310 + sortedPeerList.length * 48) * Style.uiScaleRatio : 0
+  property real contentPreferredHeight: {
+    if (!panelReady) return 0
+
+    // Base height: header, outer margins, outer layout spacing
+    var h = (headerLayout.implicitHeight + Style.margin2M)
+            + Style.marginL * 2
+            + Style.marginM
+
+    // Add This Device box height
+    if (thisDeviceBox) {
+      h += thisDeviceBox.height + Style.marginM
+    }
+
+    // Content box base height: inner padding, peers label
+    h += Style.marginM * 2
+         + (peersLabel ? peersLabel.implicitHeight : 0) + Style.marginM
+
+    // Add conditional elements inside the content box
+    if (comboBox && comboBox.visible) {
+      h += comboBox.implicitHeight + Style.marginM
+    }
+    if (exitNodeWarningBox && exitNodeWarningBox.visible) {
+      h += exitNodeWarningBox.height + Style.marginM
+    }
+    if (terminalWarningBox && terminalWarningBox.visible) {
+      h += terminalWarningBox.height + Style.marginM
+    }
+    if (searchInput && searchInput.visible) {
+      h += searchInput.implicitHeight + Style.marginM
+    }
+
+    // Add the list area height (which automatically scales with number of peers)
+    if (peerListColumn && mainInstance?.tailscaleRunning && sortedPeerList.length > 0) {
+      h += peerListColumn.implicitHeight
+    } else {
+      h += Math.round(100 * Style.uiScaleRatio)
+    }
+
+    // Limit to minimum 250px and maximum 750px (scaled with uiScaleRatio)
+    return Math.max(250 * Style.uiScaleRatio, Math.min(750 * Style.uiScaleRatio, h))
+  }
 
   anchors.fill: parent
 
@@ -365,9 +405,244 @@ Item {
       id: mainContainer
       anchors {
         fill: parent
-        margins: Style.marginM
+        margins: Style.marginL
       }
-      spacing: Style.marginL
+      spacing: Style.marginM
+
+      NBox {
+        id: headerBox
+        Layout.fillWidth: true
+        Layout.preferredHeight: headerLayout.implicitHeight + Style.margin2M
+
+        RowLayout {
+          id: headerLayout
+          anchors {
+            fill: parent
+            margins: Style.marginM
+          }
+          spacing: Style.marginS
+
+          TailscaleIcon {
+            pointSize: Style.fontSizeL
+            applyUiScale: true
+            connected: mainInstance?.tailscaleRunning ?? false
+            connecting: (mainInstance?.isRefreshing ?? false) && !(mainInstance?.tailscaleRunning ?? false)
+          }
+
+          NText {
+            text: pluginApi?.tr("panel.title")
+            pointSize: Style.fontSizeL
+            font.weight: Style.fontWeightBold
+            color: Color.mOnSurface
+            Layout.fillWidth: true
+          }
+
+          // Taildrop receive
+          NIconButton {
+            icon: "file-download"
+            tooltipText: pluginApi?.tr("panel.taildrop.receive")
+            baseSize: Style.baseWidgetSize * 0.8
+            visible: (mainInstance?.tailscaleRunning ?? false) && (mainInstance?.taildropEnabled ?? true)
+            onClicked: {
+              if (mainInstance) {
+                mainInstance.startTaildropReceive()
+                if (pluginApi) pluginApi.closePanel(pluginApi.panelOpenScreen)
+              }
+            }
+          }
+
+          // Admin console
+          NIconButton {
+            icon: "external-link"
+            tooltipText: pluginApi?.tr("panel.admin-console")
+            baseSize: Style.baseWidgetSize * 0.8
+            visible: mainInstance?.tailscaleRunning ?? false
+            onClicked: {
+              Qt.openUrlExternally("https://login.tailscale.com/admin")
+            }
+          }
+
+          // Exit node disable
+          NIconButton {
+            icon: "globe-off"
+            tooltipText: pluginApi?.tr("panel.exit-node.disable")
+            baseSize: Style.baseWidgetSize * 0.8
+            visible: mainInstance?.exitNodeStatus !== null && mainInstance?.exitNodeStatus !== undefined
+            onClicked: root.clearExitNode()
+          }
+
+          // Login Button
+          NIconButton {
+            icon: "login"
+            tooltipText: pluginApi?.tr("context.login")
+            baseSize: Style.baseWidgetSize * 0.8
+            visible: mainInstance?.needsLogin ?? false
+            colorFg: Color.mPrimary
+            enabled: mainInstance?.tailscaleInstalled ?? false
+            onClicked: {
+              if (mainInstance) {
+                mainInstance.loginTailscale()
+              }
+            }
+          }
+
+          // Connect / Disconnect Button
+          NIconButton {
+            icon: mainInstance?.tailscaleRunning ? "plug-x" : "plug"
+            tooltipText: mainInstance?.tailscaleRunning
+              ? pluginApi?.tr("context.disconnect")
+              : pluginApi?.tr("context.connect")
+            baseSize: Style.baseWidgetSize * 0.8
+            visible: !(mainInstance?.needsLogin ?? false)
+            colorFg: mainInstance?.tailscaleRunning ? Color.mError : Color.mPrimary
+            enabled: mainInstance?.tailscaleInstalled ?? false
+            onClicked: {
+              if (mainInstance) {
+                mainInstance.toggleTailscale()
+              }
+            }
+          }
+
+          // Close button
+          NIconButton {
+            icon: "close"
+            tooltipText: pluginApi?.tr("panel.close")
+            baseSize: Style.baseWidgetSize * 0.8
+            onClicked: {
+              if (pluginApi) {
+                pluginApi.closePanel(pluginApi.panelOpenScreen)
+              }
+            }
+          }
+        }
+      }
+
+      NBox {
+        id: thisDeviceBox
+        Layout.fillWidth: true
+        Layout.preferredHeight: thisDeviceLayout.implicitHeight + Style.margin2M
+        forceOpaque: true
+
+        ColumnLayout {
+          id: thisDeviceLayout
+          anchors {
+            fill: parent
+            margins: Style.marginM
+          }
+          spacing: Style.marginS
+
+          NLabel {
+            id: thisDeviceLabel
+            label: pluginApi?.tr("panel.this-device")
+            Layout.fillWidth: true
+            Layout.leftMargin: Style.marginXS
+          }
+
+          RowLayout {
+            id: thisDeviceRow
+            Layout.fillWidth: true
+            spacing: Style.marginM
+            opacity: mainInstance?.tailscaleRunning ? 1.0 : 0.65
+
+            NIcon {
+              icon: mainInstance?.selfNode ? root.getOSIcon(mainInstance.selfNode.OS) : "device-laptop"
+              pointSize: Style.fontSizeXXL
+              color: mainInstance?.tailscaleRunning ? Color.mPrimary : Color.mOnSurfaceVariant
+              Layout.alignment: Qt.AlignVCenter
+            }
+
+            ColumnLayout {
+              spacing: 2
+              Layout.fillWidth: true
+              Layout.alignment: Qt.AlignVCenter
+
+              NText {
+                text: mainInstance?.selfNode ? mainInstance.selfNode.HostName : "Local Host"
+                color: mainInstance?.tailscaleRunning ? Color.mOnSurface : Color.mOnSurfaceVariant
+                font.weight: Style.fontWeightBold
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+              }
+
+              NText {
+                text: mainInstance?.selfNode 
+                  ? root.normalizeFqdn(mainInstance.selfNode.DNSName) 
+                  : (mainInstance?.needsLogin ? pluginApi?.tr("panel.not-authenticated") : pluginApi?.tr("panel.not-connected"))
+                pointSize: Style.fontSizeXS
+                color: Color.mOnSurfaceVariant
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+              }
+            }
+
+            ColumnLayout {
+              spacing: 4
+              Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+
+              // IP Address (clickable to copy)
+              RowLayout {
+                id: thisDeviceIpContainer
+                spacing: Style.marginXS
+                visible: mainInstance?.tailscaleRunning && mainInstance?.tailscaleIp !== ""
+                Layout.alignment: Qt.AlignRight
+
+                NText {
+                  text: mainInstance?.tailscaleIp || ""
+                  pointSize: Style.fontSizeS
+                  font.family: Settings.data.ui.fontFixed
+                  color: thisDeviceIpMouseArea.containsMouse ? Color.mPrimary : Color.mOnSurfaceVariant
+                }
+
+                NIcon {
+                  icon: "copy"
+                  pointSize: Style.fontSizeXS
+                  color: thisDeviceIpMouseArea.containsMouse ? Color.mPrimary : Qt.alpha(Color.mOnSurfaceVariant, 0.5)
+                }
+
+                MouseArea {
+                  id: thisDeviceIpMouseArea
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: {
+                    if (mainInstance?.tailscaleIp) {
+                      root.copyToClipboard(mainInstance.tailscaleIp)
+                      ToastService.showNotice(
+                        pluginApi?.tr("toast.ip-copied.title"),
+                        mainInstance.tailscaleIp,
+                        "clipboard"
+                      )
+                    }
+                  }
+                }
+              }
+
+              // Connection Status Pill
+              NBox {
+                Layout.alignment: Qt.AlignRight
+                Layout.preferredWidth: statusLabel.implicitWidth + Style.marginS * 2
+                Layout.preferredHeight: statusLabel.implicitHeight + Style.marginXS * 2
+                color: mainInstance?.tailscaleRunning 
+                  ? Qt.alpha(Color.mPrimary, 0.15) 
+                  : Qt.alpha(Color.mOnSurface, 0.08)
+                border.width: 1
+                border.color: mainInstance?.tailscaleRunning 
+                  ? Qt.alpha(Color.mPrimary, 0.3) 
+                  : Qt.alpha(Color.mOnSurface, 0.15)
+
+                NText {
+                  id: statusLabel
+                  anchors.centerIn: parent
+                  text: mainInstance?.tailscaleRunning ? pluginApi?.tr("panel.status-connected") : pluginApi?.tr("panel.status-offline")
+                  pointSize: Style.fontSizeXXS
+                  font.weight: Style.fontWeightMedium
+                  color: mainInstance?.tailscaleRunning ? Color.mPrimary : Color.mOnSurfaceVariant
+                }
+              }
+            }
+          }
+        }
+      }
 
       NBox {
         Layout.fillWidth: true
@@ -379,60 +654,15 @@ Item {
           spacing: Style.marginM
           clip: true
 
-          RowLayout {
+          NLabel {
+            id: peersLabel
+            label: pluginApi?.tr("panel.peers-title")
             Layout.fillWidth: true
-            spacing: Style.marginS
-
-            NIcon {
-              icon: "network"
-              pointSize: Style.fontSizeL
-              color: Color.mPrimary
-            }
-
-            NText {
-              text: pluginApi?.tr("panel.title")
-              pointSize: Style.fontSizeL
-              font.weight: Style.fontWeightBold
-              color: Color.mOnSurface
-              Layout.fillWidth: true
-            }
-
-            NText {
-              text: mainInstance?.tailscaleRunning
-                ? (mainInstance?.peerList?.length || 0) + " " + (pluginApi?.tr("panel.peers"))
-                : (mainInstance?.needsLogin ? pluginApi?.tr("panel.not-authenticated") : pluginApi?.tr("panel.not-connected"))
-              pointSize: Style.fontSizeS
-              color: Color.mOnSurfaceVariant
-            }
-          }
-
-          NText {
-            Layout.fillWidth: true
-            text: mainInstance?.tailscaleIp || ""
-            visible: (mainInstance?.tailscaleRunning ?? false) && (mainInstance?.tailscaleIp ?? false)
-            pointSize: Style.fontSizeS
-            color: mainIpMouseArea.containsMouse ? Color.mPrimary : Color.mOnSurfaceVariant
-            font.family: Settings.data.ui.fontFixed
-
-            MouseArea {
-              id: mainIpMouseArea
-              anchors.fill: parent
-              hoverEnabled: true
-              cursorShape: Qt.PointingHandCursor
-              onClicked: function() {
-                if (mainInstance?.tailscaleIp) {
-                  root.copyToClipboard(mainInstance.tailscaleIp)
-                  ToastService.showNotice(
-                    pluginApi?.tr("toast.ip-copied.title"),
-                    mainInstance.tailscaleIp,
-                    "clipboard"
-                  )
-                }
-              }
-            }
+            Layout.leftMargin: Style.marginS
           }
 
           NComboBox {
+            id: comboBox
             Layout.fillWidth: true
             visible: (mainInstance?.accounts?.length ?? 0) >= 2
             model: (mainInstance?.accounts || []).map(function (a) {
@@ -449,6 +679,7 @@ Item {
 
           // Exit node status
           Rectangle {
+            id: exitNodeWarningBox
             Layout.fillWidth: true
             Layout.preferredHeight: exitNodeLayout.implicitHeight + Style.marginS * 2
             visible: mainInstance?.exitNodeStatus !== null && mainInstance?.exitNodeStatus !== undefined
@@ -499,6 +730,7 @@ Item {
 
           // Warning banner for missing terminal configuration
           Rectangle {
+            id: terminalWarningBox
             Layout.fillWidth: true
             Layout.preferredHeight: terminalWarningLayout.implicitHeight + Style.marginM * 2
             visible: !root.isTerminalConfigured
@@ -557,21 +789,15 @@ Item {
             }
           }
 
-          Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: Qt.alpha(Color.mOnSurface, 0.1)
-            visible: (root.mainInstance?.tailscaleRunning ?? false) && root.sortedPeerList.length > 0
-          }
-
           Flickable {
             id: peerFlickable
             Layout.fillWidth: true
             Layout.fillHeight: true
+            visible: (mainInstance?.tailscaleRunning ?? false) && root.sortedPeerList.length > 0 && !root.searchHasNoResults
             clip: true
             contentWidth: width
             contentHeight: peerListColumn.implicitHeight
-            interactive: contentHeight > height
+            interactive: contentHeight > height + 4
             boundsBehavior: Flickable.StopAtBounds
             pressDelay: 0
             enabled: !(mainInstance?.accountSwitchInProgress ?? false)
@@ -581,10 +807,10 @@ Item {
               NumberAnimation { duration: Style.animationFast }
             }
 
-              ColumnLayout {
+            ColumnLayout {
               id: peerListColumn
               width: peerFlickable.width
-              spacing: Style.marginS
+              spacing: Style.marginM
 
               Repeater {
                 model: root.filteredPeerList
@@ -593,12 +819,25 @@ Item {
                   id: peerDelegate
                   Layout.fillWidth: true
                   Layout.preferredWidth: peerFlickable.width
+                  Layout.leftMargin: Style.marginXS
+                  Layout.rightMargin: Style.marginXS
                   implicitWidth: peerFlickable.width
-                  implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
-                  topPadding: Style.marginS
-                  bottomPadding: Style.marginS
-                  leftPadding: Style.marginL
-                  rightPadding: Style.marginL
+                  implicitHeight: Math.round(50 * Style.uiScaleRatio)
+                  topPadding: Style.marginM
+                  bottomPadding: Style.marginM
+                  leftPadding: Style.marginM
+                  rightPadding: Style.marginM
+
+                  MouseArea {
+                    anchors {
+                      left: parent.left
+                      top: parent.top
+                      bottom: parent.bottom
+                      right: peerIpContainer.visible ? peerIpContainer.left : parent.right
+                    }
+                    acceptedButtons: Qt.NoButton
+                    cursorShape: (peerDelegate.peerIp && root.defaultPeerAction !== "copy-ip") ? Qt.PointingHandCursor : Qt.ArrowCursor
+                  }
 
                   readonly property var peerData: modelData
                   readonly property string peerIp: filterIPv4(peerData.TailscaleIPs)[0] || ""
@@ -606,12 +845,14 @@ Item {
                   readonly property string peerTsName: mainInstance ? mainInstance.tailscaleName(peerData.DNSName) : ""
                   readonly property bool peerOnline: peerData.Online || false
 
-                  background: Rectangle {
+                  background: NBox {
                     anchors.fill: parent
-                    color: peerDelegate.hovered ? Qt.alpha(Color.mPrimary, 0.1) : "transparent"
-                    radius: Style.radiusM
-                    border.width: peerDelegate.hovered ? 1 : 0
-                    border.color: Qt.alpha(Color.mPrimary, 0.3)
+                    color: peerDelegate.peerData.IsSelf
+                      ? (peerDelegate.hovered ? Qt.alpha(Color.mPrimary, 0.35) : Qt.alpha(Color.mPrimary, 0.25))
+                      : (peerDelegate.peerOnline 
+                        ? (peerDelegate.hovered ? Qt.alpha(Color.mPrimary, 0.25) : Qt.alpha(Color.mPrimary, 0.15)) 
+                        : (peerDelegate.hovered ? Qt.alpha(Color.mOnSurface, 0.08) : Color.mSurface))
+                    forceOpaque: true
                   }
 
                   contentItem: RowLayout {
@@ -619,17 +860,19 @@ Item {
 
                     NIcon {
                       icon: root.getOSIcon(peerDelegate.peerData.OS)
-                      pointSize: Style.fontSizeM
+                      pointSize: Style.fontSizeXXL
                       color: peerDelegate.peerOnline ? Color.mPrimary : Color.mOnSurfaceVariant
+                      Layout.alignment: Qt.AlignVCenter
                     }
 
                     ColumnLayout {
                       spacing: 0
                       Layout.fillWidth: true
+                      Layout.alignment: Qt.AlignVCenter
 
                       NText {
-                        text: peerDelegate.peerHostname
-                        color: Color.mOnSurface
+                        text: peerDelegate.peerHostname + (peerDelegate.peerData.IsSelf ? " (" + (pluginApi?.tr("panel.self") || "you") + ")" : "")
+                        color: peerDelegate.peerData.IsSelf ? Color.mPrimary : Color.mOnSurface
                         font.weight: Style.fontWeightMedium
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -647,24 +890,50 @@ Item {
 
                     NIcon {
                       icon: "globe"
-                      pointSize: Style.fontSizeS
+                      pointSize: Style.fontSizeL
                       color: peerDelegate.peerData.ExitNode ? Color.mPrimary : Qt.alpha(Color.mOnSurfaceVariant, 0.4)
                       visible: peerDelegate.peerData.ExitNode || peerDelegate.peerData.ExitNodeOption
                       Layout.alignment: Qt.AlignRight
                     }
 
-                    NText {
-                      text: peerDelegate.peerIp
-                      pointSize: Style.fontSizeS
-                      color: Color.mOnSurfaceVariant
-                      font.family: Settings.data.ui.fontFixed
+                    RowLayout {
+                      id: peerIpContainer
+                      spacing: Style.marginXS
                       visible: peerDelegate.peerIp !== ""
                       Layout.alignment: Qt.AlignRight
+
+                      NText {
+                        text: peerDelegate.peerIp
+                        pointSize: Style.fontSizeS
+                        font.family: Settings.data.ui.fontFixed
+                        color: peerIpMouseArea.containsMouse ? Color.mPrimary : Color.mOnSurfaceVariant
+                      }
+
+                      NIcon {
+                        icon: "copy"
+                        pointSize: Style.fontSizeXS
+                        color: peerIpMouseArea.containsMouse ? Color.mPrimary : Qt.alpha(Color.mOnSurfaceVariant, 0.5)
+                      }
+
+                      MouseArea {
+                        id: peerIpMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                          root.copyToClipboard(peerDelegate.peerIp)
+                          ToastService.showNotice(
+                            pluginApi?.tr("toast.ip-copied.title"),
+                            peerDelegate.peerIp,
+                            "clipboard"
+                          )
+                        }
+                      }
                     }
                   }
 
                   onClicked: {
-                    if (peerDelegate.peerIp) {
+                    if (peerDelegate.peerIp && root.defaultPeerAction !== "copy-ip") {
                       root.executePeerAction(root.defaultPeerAction, peerDelegate.peerData)
                     }
                   }
@@ -675,81 +944,26 @@ Item {
                   }
                 }
               }
-
-              NText {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: Style.marginL
-                text: root.searchHasNoResults ? root.pluginApi?.tr("panel.no-search-results") : root.pluginApi?.tr("panel.no-peers")
-                visible: !(root.mainInstance?.tailscaleRunning ?? false) || root.sortedPeerList.length === 0 || root.searchHasNoResults
-                pointSize: Style.fontSizeM
-                color: Color.mOnSurfaceVariant
-                horizontalAlignment: Text.AlignHCenter
-              }
             }
           }
-        }
-      }
 
-      // Taildrop receive button
-      NButton {
-        Layout.fillWidth: true
-        visible: (mainInstance?.tailscaleRunning ?? false) && (mainInstance?.taildropEnabled ?? true)
-        text: pluginApi?.tr("panel.taildrop.receive")
-        icon: "file-download"
-        onClicked: {
-          if (!mainInstance) return
-          mainInstance.startTaildropReceive()
-          if (pluginApi) pluginApi.closePanel(pluginApi.panelOpenScreen)
-        }
-      }
+          // Centered empty state container
+          Item {
+            id: emptyStateContainer
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: !(mainInstance?.tailscaleRunning ?? false) || root.sortedPeerList.length === 0 || root.searchHasNoResults
 
-      NButton {
-        Layout.fillWidth: true
-        visible: mainInstance?.tailscaleRunning ?? false
-        text: pluginApi?.tr("panel.admin-console")
-        icon: "external-link"
-        onClicked: {
-          Qt.openUrlExternally("https://login.tailscale.com/admin")
-        }
-      }
-
-      NButton {
-        Layout.fillWidth: true
-        visible: mainInstance?.exitNodeStatus !== null && mainInstance?.exitNodeStatus !== undefined
-        text: pluginApi?.tr("panel.exit-node.disable")
-        icon: "globe-off"
-        onClicked: root.clearExitNode()
-      }
-
-      NButton {
-        Layout.fillWidth: true
-        visible: mainInstance?.needsLogin ?? false
-        text: pluginApi?.tr("context.login")
-        icon: "login"
-        backgroundColor: Color.mPrimary
-        textColor: Color.mOnPrimary
-        enabled: mainInstance?.tailscaleInstalled ?? false
-        onClicked: {
-          if (mainInstance) {
-            mainInstance.loginTailscale()
-          }
-        }
-      }
-
-      NButton {
-        Layout.fillWidth: true
-        visible: !(mainInstance?.needsLogin ?? false)
-        text: mainInstance?.tailscaleRunning
-          ? pluginApi?.tr("context.disconnect")
-          : pluginApi?.tr("context.connect")
-        icon: mainInstance?.tailscaleRunning ? "plug-x" : "plug"
-        backgroundColor: mainInstance?.tailscaleRunning ? Color.mError : Color.mPrimary
-        textColor: mainInstance?.tailscaleRunning ? Color.mOnError : Color.mOnPrimary
-        enabled: mainInstance?.tailscaleInstalled ?? false
-        onClicked: {
-          if (mainInstance) {
-            mainInstance.toggleTailscale()
+            NText {
+              id: noPeersLabel
+              anchors.centerIn: parent
+              width: parent.width - Style.margin2XL
+              text: root.searchHasNoResults ? root.pluginApi?.tr("panel.no-search-results") : root.pluginApi?.tr("panel.no-peers")
+              pointSize: Style.fontSizeM
+              color: Color.mOnSurfaceVariant
+              horizontalAlignment: Text.AlignHCenter
+              wrapMode: Text.Wrap
+            }
           }
         }
       }

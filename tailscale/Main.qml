@@ -62,6 +62,7 @@ Item {
   property string lastToggleAction: ""
   property var _realPeerList: []
   property var exitNodeStatus: null
+  property var selfNode: null
 
   property var accounts: []
   property string currentAccountId: ""
@@ -175,6 +176,7 @@ Item {
             root.peerCount = 0;
             root._realPeerList = [];
             root.exitNodeStatus = null;
+            root.selfNode = null;
             // Capture the pending authentication URL exposed by the daemon.
             var newAuthUrl = data.AuthURL || "";
             root.authUrl = newAuthUrl;
@@ -201,6 +203,22 @@ Item {
             loginTimeoutTimer.stop();
 
             var peers = [];
+            if (data.Self) {
+              var selfIpv4s = filterIPv4(data.Self.TailscaleIPs);
+              root.selfNode = {
+                "HostName": resolveHostName(data.Self.HostName, data.Self.DNSName),
+                "DNSName": data.Self.DNSName,
+                "TailscaleIPs": selfIpv4s,
+                "Online": true,
+                "OS": data.Self.OS || "linux",
+                "Tags": data.Self.Tags || [],
+                "ExitNodeOption": false,
+                "ExitNode": false,
+                "IsSelf": true
+              };
+            } else {
+              root.selfNode = null;
+            }
             if (data.Peer) {
               for (var peerId in data.Peer) {
                 var peer = data.Peer[peerId];
@@ -236,6 +254,7 @@ Item {
             root.peerCount = 0;
             root._realPeerList = [];
             root.exitNodeStatus = null;
+            root.selfNode = null;
             root.authUrl = "";
           }
         } catch (e) {
@@ -244,6 +263,7 @@ Item {
           root.needsLogin = false;
           root.tailscaleStatus = "Error";
           root._realPeerList = [];
+          root.selfNode = null;
           root.authUrl = "";
         }
       } else {
@@ -253,6 +273,7 @@ Item {
         root.tailscaleIp = "";
         root.peerCount = 0;
         root._realPeerList = [];
+        root.selfNode = null;
         root.authUrl = "";
       }
       root.accountSwitchInProgress = false;

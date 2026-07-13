@@ -80,6 +80,12 @@
   },
   "panel": {
     "title": "Tailscale网络",
+    "close": "关闭",
+    "peers-title": "对等设备",
+    "self": "自己",
+    "this-device": "此设备",
+    "status-connected": "已连接",
+    "status-offline": "离线",
     "peers": "对等设备",
     "not-connected": "未连接",
     "not-authenticated": "未认证",

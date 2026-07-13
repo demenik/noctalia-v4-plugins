@@ -80,6 +80,12 @@
   },
   "panel": {
     "title": "Tailscale-nätverk",
+    "close": "Stäng",
+    "peers-title": "Peers",
+    "self": "du",
+    "this-device": "Denna enhet",
+    "status-connected": "Ansluten",
+    "status-offline": "Offline",
     "peers": "peers",
     "not-connected": "Ej ansluten",
     "not-authenticated": "Ej autentiserad",

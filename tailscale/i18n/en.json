@@ -80,6 +80,12 @@
   },
   "panel": {
     "title": "Tailscale Network",
+    "close": "Close",
+    "peers-title": "Peers",
+    "self": "you",
+    "this-device": "This Device",
+    "status-connected": "Connected",
+    "status-offline": "Offline",
     "peers": "peers",
     "not-connected": "Not connected",
     "not-authenticated": "Not authenticated",

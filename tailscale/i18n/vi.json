@@ -80,6 +80,12 @@
   },
   "panel": {
     "title": "Mạng Tailscale",
+    "close": "Đóng",
+    "peers-title": "Thiết bị",
+    "self": "bạn",
+    "this-device": "Thiết bị này",
+    "status-connected": "Đã kết nối",
+    "status-offline": "Ngoại tuyến",
     "peers": "thiết bị",
     "not-connected": "Chưa kết nối",
     "not-authenticated": "Chưa xác thực",

@@ -80,6 +80,12 @@
   },
   "panel": {
     "title": "Réseau Tailscale",
+    "close": "Fermer",
+    "peers-title": "Pairs",
+    "self": "vous",
+    "this-device": "Cet appareil",
+    "status-connected": "Connecté",
+    "status-offline": "Hors ligne",
     "peers": "pairs",
     "not-connected": "Non connecté",
     "not-authenticated": "Non authentifié",
