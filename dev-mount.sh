@@ -136,7 +136,7 @@ systemctl --user restart noctalia.service
 echo "[+] Noctalia restarted successfully."
 
 get_last_mod_time() {
-  find "$WORKSPACE_DIR" -maxdepth 3 \( -name "*.qml" -o -name "*.js" -o -name "*.json" \) -not -path "*/.*" -printf '%T@\n' 2>/dev/null | sort -n | tail -n 1
+  find "$WORKSPACE_DIR" -maxdepth 3 \( -name "*.qml" -o -name "*.js" -o -name "*.json" -o -name "*.svg" \) -not -path "*/.*" -printf '%T@\n' 2>/dev/null | sort -n | tail -n 1
 }
 
 LAST_MOD=$(get_last_mod_time)
