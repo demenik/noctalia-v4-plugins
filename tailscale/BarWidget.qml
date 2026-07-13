@@ -55,7 +55,6 @@ Item {
         connected: root.tailscaleConnected
         connecting: root.tailscaleConnecting
         hovered: mouseArea.containsMouse
-        litColor: Color.mPrimary
       }
 
       // Show details when not in compact mode and there's something to show
