@@ -818,8 +818,8 @@ Item {
                 radius: Style.radiusM
                 anchors.horizontalCenter: parent.horizontalCenter
                 color:        ba.containsMouse ? Color.mHover : Color.mSurface
-                border.color: btn._accented ? btn._accentColor
-                            : ba.containsMouse ? Color.mOnSurfaceVariant
+                border.color: ba.containsMouse ? Color.mOnHover
+                            : btn._accented ? btn._accentColor
                             : "transparent"
                 border.width: btn._accented ? 2 : ba.containsMouse ? 1 : 0
                 clip: true
@@ -856,8 +856,8 @@ Item {
                 }
                 NIcon {
                     anchors.centerIn: parent; icon: btn.icon
-                    color: btn._accented ? btn._accentColor
-                         : ba.containsMouse ? Color.mOnHover
+                    color: ba.containsMouse ? Color.mOnHover
+                         : btn._accented ? btn._accentColor
                          : Color.mOnSurface
                     Behavior on color { ColorAnimation { duration: 120 } }
                 }
