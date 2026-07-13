@@ -25,7 +25,12 @@ Item {
 	readonly property bool locked: main?.locked ?? false
 	readonly property bool installed: main?.installed ?? false
 
+	readonly property var cfg: pluginApi?.pluginSettings || ({})
+	readonly property var defaults: pluginApi?.manifest?.metadata?.defaultSettings || ({})
+	readonly property bool isCompact: cfg.compactMode ?? defaults.compactMode ?? false
+
 	readonly property color stateColor: {
+		if (mouseArea.containsMouse) return Color.mOnHover
 		if (!installed) return Color.mError
 		if (vpnState === "connected") return Color.mPrimary
 		if (vpnState === "connecting" || vpnState === "disconnecting") return Color.mTertiary
@@ -36,13 +41,21 @@ Item {
 
 	property real margins: Style.marginM * 2
 
-	readonly property real contentWidth: isVertical ? Style.capsuleHeight : Math.round(layout.implicitWidth + margins)
-	readonly property real contentHeight: isVertical ? Math.round(layout.implicitHeight + margins) : Style.capsuleHeight
+	readonly property real contentWidth: {
+		if (isCompact) return Style.capsuleHeight
+		return isVertical ? Style.capsuleHeight : Math.round(layout.implicitWidth + margins)
+	}
+	readonly property real contentHeight: {
+		if (isCompact) return Style.capsuleHeight
+		return isVertical ? Math.round(layout.implicitHeight + margins) : Style.capsuleHeight
+	}
 
 	implicitWidth: contentWidth
 	implicitHeight: contentHeight
 
 	Layout.alignment: Qt.AlignVCenter
+
+
 
 	Rectangle {
 		id: visualCapsule
@@ -50,8 +63,8 @@ Item {
 		y: Style.pixelAlignCenter(parent.height, height)
 		width: root.contentWidth
 		height: root.contentHeight
-		radius: Style.radiusM
-		color: Style.capsuleColor
+		radius: root.isCompact ? (root.contentHeight / 2) : Style.radiusM
+		color: mouseArea.containsMouse ? Color.mHover : Style.capsuleColor
 		border.color: Style.capsuleBorderColor
 		border.width: Style.capsuleBorderWidth
 
@@ -66,24 +79,26 @@ Item {
 				id: iconRow
 				spacing: Style.marginXS
 
-				NIcon {
-					icon: root.installed ? "shield" : "shield-off"
+				MullvadIcon {
+					pointSize: Style.fontSizeL
+					applyUiScale: false
 					color: root.stateColor
+					crossed: !root.installed
 				}
 
 				NText {
-					visible: !root.isVertical && (root.main?.showCityName ?? false) && root.vpnState === "connected"
+					visible: !root.isCompact && !root.isVertical && (root.main?.showCityName ?? false) && root.vpnState === "connected"
 					text: root.main?.currentLocation?.city || ""
 					pointSize: Style.fontSizeXS
-					color: Color.mOnSurface
+					color: mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface
 				}
 
 				NText {
-					visible: !root.isVertical && (root.main?.showIp ?? false) && root.vpnState === "connected" && (root.main?.currentLocation?.ipv4 || "").length > 0
+					visible: !root.isCompact && !root.isVertical && (root.main?.showIp ?? false) && root.vpnState === "connected" && (root.main?.currentLocation?.ipv4 || "").length > 0
 					text: root.main?.currentLocation?.ipv4 || ""
 					pointSize: Style.fontSizeXS
 					font.family: Settings.data.ui.fontFixed
-					color: Color.mOnSurface
+					color: mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface
 				}
 			}
 		}

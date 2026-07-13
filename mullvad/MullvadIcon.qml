@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import qs.Commons
 import qs.Widgets
 
@@ -9,16 +10,27 @@ Item {
 	property bool crossed: false
 	property color color: Color.mOnSurface
 
-	implicitWidth: icon.implicitWidth
-	implicitHeight: icon.implicitHeight
+	readonly property real iconSize: Math.max(1, applyUiScale ? root.pointSize * Style.uiScaleRatio : root.pointSize)
 
-	NIcon {
+	width: iconSize
+	height: iconSize
+	implicitWidth: iconSize
+	implicitHeight: iconSize
+
+	Image {
 		id: icon
-		anchors.centerIn: parent
-		icon: "shield"
-		pointSize: root.pointSize
-		applyUiScale: root.applyUiScale
-		color: root.color
+		anchors.fill: parent
+		source: "icons/mullvad.svg"
+		fillMode: Image.PreserveAspectFit
+		mipmap: true
+		smooth: true
+
+		layer.enabled: true
+		layer.effect: ShaderEffect {
+			property color targetColor: root.color
+			property real colorizeMode: 2.0
+			fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/appicon_colorize.frag.qsb")
+		}
 	}
 
 	NIcon {
