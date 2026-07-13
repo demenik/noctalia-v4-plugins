@@ -169,30 +169,51 @@ Item {
 						spacing: Style.marginM
 
 						NLabel {
-							label: root._stateLabel()
+							label: pluginApi?.tr("panel.status")
 							Layout.leftMargin: Style.marginXS
 						}
 
 						RowLayout {
-							visible: !!(root.main?.currentLocation?.ipv4)
-							spacing: Style.marginXS
+							Layout.fillWidth: true
 							Layout.leftMargin: Style.marginS
+							spacing: Style.marginS
 
 							NText {
-								text: root.main?.currentLocation?.ipv4 || ""
-								font.family: Settings.data.ui.fontFixed
-								pointSize: Style.fontSizeS
-								color: Color.mOnSurfaceVariant
+								text: root._stateLabel()
+								pointSize: Style.fontSizeM
+								font.weight: Style.fontWeightSemiBold
+								color: {
+									if (!root.installed) return Color.mError
+									if (root.vpnState === "connected") return Color.mPrimary
+									if (root.vpnState === "connecting" || root.vpnState === "disconnecting") return Color.mTertiary
+									if (root.locked) return Color.mError
+									if (root.vpnState === "error") return Color.mError
+									return Color.mOnSurfaceVariant
+								}
 							}
 
-							NIconButton {
-								icon: "copy"
-								baseSize: Style.baseWidgetSize * 0.6
-								tooltipText: pluginApi?.tr("action.copy-ip")
-								onClicked: {
-									if (root.main?.currentLocation?.ipv4) {
-										Quickshell.clipboardText = root.main.currentLocation.ipv4
-										ToastService.showNotice(pluginApi?.tr("toast.title"), root.main.currentLocation.ipv4, "copy")
+							Item { Layout.fillWidth: true } // Spacer
+
+							RowLayout {
+								visible: !!(root.main?.currentLocation?.ipv4)
+								spacing: Style.marginXS
+
+								NText {
+									text: root.main?.currentLocation?.ipv4 || ""
+									font.family: Settings.data.ui.fontFixed
+									pointSize: Style.fontSizeS
+									color: Color.mOnSurfaceVariant
+								}
+
+								NIconButton {
+									icon: "copy"
+									baseSize: Style.baseWidgetSize * 0.6
+									tooltipText: pluginApi?.tr("action.copy-ip")
+									onClicked: {
+										if (root.main?.currentLocation?.ipv4) {
+											Quickshell.clipboardText = root.main.currentLocation.ipv4
+											ToastService.showNotice(pluginApi?.tr("toast.title"), root.main.currentLocation.ipv4, "copy")
+										}
 									}
 								}
 							}
@@ -218,11 +239,11 @@ Item {
 							text: {
 								var parts = []
 								if (root.vpnState === "connected" && _loc && _loc.country) {
-									var s = (_loc.city || root._countryName(_loc.country))
+									var s = root._flag(_loc.country) + " " + (_loc.city || root._countryName(_loc.country))
 									if (_loc.hostname) s += " / " + _loc.hostname
 									parts.push(s)
 								} else if (_sel && _sel.country) {
-									var t = root._countryName(_sel.country)
+									var t = root._flag(_sel.country) + " " + root._countryName(_sel.country)
 									if (_sel.city) t += " / " + _sel.city
 									if (_sel.hostname) t += " / " + _sel.hostname
 									parts.push(t)
@@ -243,26 +264,37 @@ Item {
 							text: root.vpnState === "connected"
 								? pluginApi?.tr("action.disconnect")
 								: (root.vpnState === "connecting" ? pluginApi?.tr("action.cancel") : pluginApi?.tr("action.connect"))
+							icon: root.vpnState === "connected"
+								? "plug-x"
+								: (root.vpnState === "connecting" ? "close" : "plug")
 							enabled: root.installed
 							onClicked: root.main?.toggleVpn()
 						}
 
 						// Account expiry warning
-						NBox {
-							id: expiryWarningBox
+						RowLayout {
+							id: expiryWarningRow
 							visible: root.installed && root.main?.accountDaysLeft !== undefined && root.main.accountDaysLeft <= (root.main?.expiryWarningDays ?? 7)
 							Layout.fillWidth: true
-							Layout.preferredHeight: expiryText.implicitHeight + Style.margin2M
-							color: Color.mError
+							Layout.leftMargin: Style.marginS
+							spacing: Style.marginXS
+
+							NIcon {
+								icon: "alert-circle"
+								pointSize: Style.fontSizeS
+								color: Color.mError
+								Layout.alignment: Qt.AlignVCenter
+							}
 
 							NText {
 								id: expiryText
-								anchors.fill: parent
-								anchors.margins: Style.marginM
+								Layout.fillWidth: true
+								Layout.alignment: Qt.AlignVCenter
 								text: (root.main?.accountDaysLeft ?? 0) <= 0
 									? pluginApi?.tr("account.expired")
 									: pluginApi?.tr("account.expires-in", { days: root.main?.accountDaysLeft ?? 0 })
-								color: Color.mOnError
+								color: Color.mError
+								pointSize: Style.fontSizeS
 								wrapMode: Text.Wrap
 							}
 						}

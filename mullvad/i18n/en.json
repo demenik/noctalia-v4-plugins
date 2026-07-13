@@ -4,7 +4,8 @@
 		"close": "Close",
 		"settings": "Settings",
 		"relays": "Relays",
-		"back": "Back"
+		"back": "Back",
+		"status": "Status"
 	},
 	"toast": {
 		"title": "Mullvad",
