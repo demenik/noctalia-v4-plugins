@@ -3,7 +3,8 @@
 		"title": "Mullvad VPN",
 		"close": "Schließen",
 		"settings": "Einstellungen",
-		"relays": "Server"
+		"relays": "Server",
+		"back": "Zurück"
 	},
 	"toast": {
 		"title": "Mullvad",
@@ -37,7 +38,11 @@
 		"auto-connect": "Auto-Verbindung",
 		"auto-connect-tooltip": "Beim Start des Daemons automatisch verbinden",
 		"lan": "LAN-Freigabe",
-		"lan-tooltip": "Zugriff auf lokale Netzwerkgeräte erlauben"
+		"lan-tooltip": "Zugriff auf lokale Netzwerkgeräte erlauben",
+		"multihop": "Multihop",
+		"multihop-tooltip": "Verbindung über zwei Relays leiten",
+		"multihop-entry": "Eintrittsland",
+		"ip-version": "IP-Version"
 	},
 	"relay": {
 		"search-placeholder": "Land, Stadt oder Hostname suchen...",
@@ -52,14 +57,6 @@
 		"lockdown": "Lockdown",
 		"auto-connect": "Auto-Verbindung",
 		"lan-blocked": "LAN blockiert"
-	},
-	"advanced": {
-		"title": "Erweitert",
-		"multihop": "Multihop",
-		"multihop-tooltip": "Verbindung über zwei Relays leiten",
-		"multihop-entry": "Eintrittsland",
-		"ip-version": "IP-Version",
-		"dns": "DNS"
 	},
 	"context": {
 		"connect": "Verbinden",
@@ -96,6 +93,10 @@
 		"relay-click-connects": "Beim Auswählen eines Relays sofort verbinden",
 		"confirm-disconnect-lockdown": "Trennen bei aktivem Lockdown bestätigen",
 		"expiry-warning-days": "Warnung bei Kontoablauf (Tage)",
-		"favorite-countries": "Lieblingsländer (Komma-getrennte Codes, z.B. se,de,nl)"
+		"favorite-countries": "Lieblingsländer (Komma-getrennte Codes, z.B. se,de,nl)",
+		"multihop": "Multihop",
+		"multihop-tooltip": "Verbindung über zwei Relays leiten",
+		"multihop-entry": "Eintrittsland",
+		"ip-version": "IP-Version"
 	}
 }

@@ -3,7 +3,8 @@
 		"title": "Mullvad VPN",
 		"close": "Close",
 		"settings": "Settings",
-		"relays": "Relays"
+		"relays": "Relays",
+		"back": "Back"
 	},
 	"toast": {
 		"title": "Mullvad",
@@ -37,7 +38,11 @@
 		"auto-connect": "Auto-connect",
 		"auto-connect-tooltip": "Connect to VPN automatically when daemon starts",
 		"lan": "LAN sharing",
-		"lan-tooltip": "Allow access to local network devices while connected"
+		"lan-tooltip": "Allow access to local network devices while connected",
+		"multihop": "Multihop",
+		"multihop-tooltip": "Route through two relays for extra obfuscation",
+		"multihop-entry": "Entry country",
+		"ip-version": "IP version"
 	},
 	"relay": {
 		"search-placeholder": "Search country, city or hostname...",
@@ -52,14 +57,6 @@
 		"lockdown": "Lockdown",
 		"auto-connect": "Auto-connect",
 		"lan-blocked": "LAN blocked"
-	},
-	"advanced": {
-		"title": "Advanced",
-		"multihop": "Multihop",
-		"multihop-tooltip": "Route through two relays for extra obfuscation",
-		"multihop-entry": "Entry country",
-		"ip-version": "IP version",
-		"dns": "DNS"
 	},
 	"context": {
 		"connect": "Connect",

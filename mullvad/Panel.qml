@@ -19,6 +19,8 @@ Item {
 	readonly property var geometryPlaceholder: panelContainer
 	readonly property bool allowAttach: true
 
+	property string currentView: "main" // "main" | "settings"
+
 	property real contentPreferredWidth: 380 * Style.uiScaleRatio
 	property real contentPreferredHeight: {
 		var h = headerBox.Layout.preferredHeight
@@ -97,14 +99,32 @@ Item {
 					applyUiScale: true
 					crossed: root.vpnState === "error" || !root.installed
 					color: Color.mPrimary
+					visible: root.currentView === "main"
+				}
+
+				NIconButton {
+					icon: "arrow-left"
+					tooltipText: pluginApi?.tr("panel.back")
+					baseSize: Style.baseWidgetSize * 0.8
+					visible: root.currentView === "settings"
+					onClicked: root.currentView = "main"
 				}
 
 				NText {
-					text: pluginApi?.tr("panel.title")
+					text: root.currentView === "main" ? pluginApi?.tr("panel.title") : pluginApi?.tr("panel.settings")
 					pointSize: Style.fontSizeL
 					font.weight: Style.fontWeightBold
 					color: Color.mOnSurface
 					Layout.fillWidth: true
+				}
+
+				// Settings button
+				NIconButton {
+					icon: "settings"
+					tooltipText: pluginApi?.tr("panel.settings")
+					baseSize: Style.baseWidgetSize * 0.8
+					visible: root.currentView === "main"
+					onClicked: root.currentView = "settings"
 				}
 
 				// Close button
@@ -138,6 +158,7 @@ Item {
 				// Connection Status Box
 				NBox {
 					id: statusBox
+					visible: root.currentView === "main"
 					Layout.fillWidth: true
 					Layout.preferredHeight: statusLayout.implicitHeight + Style.margin2M
 
@@ -248,9 +269,10 @@ Item {
 					}
 				}
 
-				// Quick Toggles Box
+				// Settings / Toggles Box
 				NBox {
 					id: togglesBox
+					visible: root.currentView === "settings"
 					Layout.fillWidth: true
 					Layout.preferredHeight: togglesLayout.implicitHeight + Style.margin2M
 
@@ -288,12 +310,42 @@ Item {
 							checked: (root.main?.lanSharing ?? "allow") === "allow"
 							onToggled: checked => root.main?.setLanSharing(checked)
 						}
+
+						NToggle {
+							Layout.fillWidth: true
+							label: pluginApi?.tr("toggles.multihop")
+							description: pluginApi?.tr("toggles.multihop-tooltip")
+							checked: root.main?.multihop ?? false
+							onToggled: checked => root.main?.setMultihop(checked)
+						}
+
+						NComboBox {
+							Layout.fillWidth: true
+							visible: root.main?.multihop ?? false
+							label: pluginApi?.tr("toggles.multihop-entry")
+							model: (root.main?.relayList || []).map(function (c) { return ({ key: c.code, name: c.country }) })
+							currentKey: root.main?.multihopEntry ?? ""
+							onSelected: key => root.main?.setMultihopEntry(key)
+						}
+
+						NComboBox {
+							Layout.fillWidth: true
+							label: pluginApi?.tr("toggles.ip-version")
+							model: [
+								{ key: "any", name: "any" },
+								{ key: "v4", name: "v4" },
+								{ key: "v6", name: "v6" }
+							]
+							currentKey: root.main?.ipVersion ?? "any"
+							onSelected: key => root.main?.setIpVersion(key)
+						}
 					}
 				}
 
 				// Relay Picker Box
 				NBox {
 					id: relayBox
+					visible: root.currentView === "main"
 					Layout.fillWidth: true
 					Layout.preferredHeight: relayLayout.implicitHeight + Style.margin2M
 
@@ -400,43 +452,6 @@ Item {
 						}
 					}
 				}
-
-				// Advanced Box
-				NCollapsible {
-					Layout.fillWidth: true
-					label: pluginApi?.tr("advanced.title")
-					expanded: false
-					contentSpacing: Style.marginM
-
-					NToggle {
-						Layout.fillWidth: true
-						label: pluginApi?.tr("advanced.multihop")
-						description: pluginApi?.tr("advanced.multihop-tooltip")
-						checked: root.main?.multihop ?? false
-						onToggled: checked => root.main?.setMultihop(checked)
-					}
-
-					NComboBox {
-						Layout.fillWidth: true
-						visible: root.main?.multihop ?? false
-						label: pluginApi?.tr("advanced.multihop-entry")
-						model: (root.main?.relayList || []).map(function (c) { return ({ key: c.code, name: c.country }) })
-						currentKey: root.main?.multihopEntry ?? ""
-						onSelected: key => root.main?.setMultihopEntry(key)
-					}
-
-					NComboBox {
-						Layout.fillWidth: true
-						label: pluginApi?.tr("advanced.ip-version")
-						model: [
-							{ key: "any", name: "any" },
-							{ key: "v4", name: "v4" },
-							{ key: "v6", name: "v6" }
-						]
-						currentKey: root.main?.ipVersion ?? "any"
-						onSelected: key => root.main?.setIpVersion(key)
-					}
-				}
 			}
 		}
 	}
@@ -533,6 +548,7 @@ Item {
 	}
 
 	onVisibleChanged: if (visible) {
+		root.currentView = "main"
 		relayModel.refresh()
 		// Re-fetch in case the list isn't loaded yet
 		if ((main?.relayList?.length ?? 0) === 0) main?.refreshRelayList()
