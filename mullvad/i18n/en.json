@@ -1,4 +1,10 @@
 {
+	"panel": {
+		"title": "Mullvad VPN",
+		"close": "Close",
+		"settings": "Settings",
+		"relays": "Relays"
+	},
 	"toast": {
 		"title": "Mullvad",
 		"connected": "Connected",

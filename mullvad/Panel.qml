@@ -20,7 +20,13 @@ Item {
 	readonly property bool allowAttach: true
 
 	property real contentPreferredWidth: 380 * Style.uiScaleRatio
-	property real contentPreferredHeight: contentColumn.implicitHeight + Style.marginL * 2
+	property real contentPreferredHeight: {
+		var h = headerBox.Layout.preferredHeight
+		        + scrollColumn.implicitHeight
+		        + contentColumn.spacing
+		        + Style.marginL * 2
+		return Math.max(250 * Style.uiScaleRatio, Math.min(750 * Style.uiScaleRatio, h))
+	}
 
 	anchors.fill: parent
 
@@ -72,276 +78,364 @@ Item {
 		id: contentColumn
 		anchors.fill: parent
 		anchors.margins: Style.marginL
-		spacing: Style.marginL
+		spacing: Style.marginM
 
-		// ─── Header ───
-		ColumnLayout {
+		// Header Box
+		NBox {
+			id: headerBox
 			Layout.fillWidth: true
-			spacing: Style.marginS
+			Layout.preferredHeight: headerLayout.implicitHeight + Style.margin2M
 
 			RowLayout {
-				Layout.fillWidth: true
-				spacing: Style.marginL
+				id: headerLayout
+				anchors.fill: parent
+				anchors.margins: Style.marginM
+				spacing: Style.marginS
 
 				MullvadIcon {
 					pointSize: Style.fontSizeXL
+					applyUiScale: true
 					crossed: root.vpnState === "error" || !root.installed
-					color: {
-						if (root.vpnState === "connected") return Color.mPrimary
-						if (root.locked) return Color.mError
-						return Color.mOnSurface
-					}
+					color: Color.mPrimary
 				}
 
-				ColumnLayout {
-					Layout.fillWidth: true
-					spacing: Style.marginXXS
-					NText {
-						text: root._stateLabel()
-						pointSize: Style.fontSizeL
-						color: Color.mOnSurface
-					}
-					NText {
-						Layout.fillWidth: true
-						pointSize: Style.fontSizeS
-						color: Color.mOnSurfaceVariant
-						wrapMode: Text.Wrap
-						// Read every property upfront so QML's binding tracker
-						// registers them all as dependencies (otherwise props
-						// only read inside conditionals get missed).
-						readonly property var _m: root.main
-						readonly property var _loc: _m ? _m.currentLocation : null
-						readonly property var _sel: _m ? _m.relaySelection : null
-						readonly property bool _mh: _m ? _m.multihop : false
-						readonly property string _mhe: _m ? (_m.multihopEntry || "") : ""
-						readonly property string _iv: _m ? (_m.ipVersion || "any") : "any"
-						readonly property bool _ld: _m ? _m.lockdownMode : false
-						readonly property bool _ac: _m ? _m.autoConnect : false
-						readonly property string _lan: _m ? (_m.lanSharing || "allow") : "allow"
-						text: {
-							var parts = []
-							if (root.vpnState === "connected" && _loc && _loc.country) {
-								var s = (_loc.city || root._countryName(_loc.country))
-								if (_loc.hostname) s += " / " + _loc.hostname
-								parts.push(s)
-							} else if (_sel && _sel.country) {
-								var t = root._countryName(_sel.country)
-								if (_sel.city) t += " / " + _sel.city
-								if (_sel.hostname) t += " / " + _sel.hostname
-								parts.push(t)
-							} else {
-								parts.push(root.pluginApi?.tr("action.auto-select"))
-							}
-							if (_mh) parts.push(_mhe ? root.pluginApi?.tr("badges.multihop-via", { country: root._countryName(_mhe) }) : root.pluginApi?.tr("badges.multihop"))
-							if (_iv !== "any") parts.push(root.pluginApi?.tr("badges.ip-version", { version: _iv }))
-							if (_ld) parts.push(root.pluginApi?.tr("badges.lockdown"))
-							if (_ac) parts.push(root.pluginApi?.tr("badges.auto-connect"))
-							if (_lan === "block") parts.push(root.pluginApi?.tr("badges.lan-blocked"))
-							return parts.join(" · ")
-						}
-					}
-					NText {
-						visible: !!(root.main?.currentLocation?.ipv4)
-						text: root.main?.currentLocation?.ipv4 || ""
-						font.family: Settings.data.ui.fontFixed
-						pointSize: Style.fontSizeS
-						color: Color.mOnSurfaceVariant
-						MouseArea {
-							anchors.fill: parent
-							cursorShape: Qt.PointingHandCursor
-							onClicked: {
-								Quickshell.clipboardText = parent.text
-								ToastService.showNotice(pluginApi?.tr("toast.title"), parent.text, "copy")
-							}
-						}
-					}
-				}
-			}
-
-			NButton {
-				Layout.fillWidth: true
-				text: root.vpnState === "connected"
-					? pluginApi?.tr("action.disconnect")
-					: (root.vpnState === "connecting" ? pluginApi?.tr("action.cancel") : pluginApi?.tr("action.connect"))
-				enabled: root.installed
-				onClicked: root.main?.toggleVpn()
-			}
-
-			// Account expiry warning
-			Rectangle {
-				visible: root.installed && root.main?.accountDaysLeft !== undefined && root.main.accountDaysLeft <= (root.main?.expiryWarningDays ?? 7)
-				Layout.fillWidth: true
-				Layout.preferredHeight: expiryText.implicitHeight + Style.marginS * 2
-				color: Color.mError
-				radius: Style.radiusS
 				NText {
-					id: expiryText
-					anchors.fill: parent
-					anchors.margins: Style.marginS
-					text: (root.main?.accountDaysLeft ?? 0) <= 0
-						? pluginApi?.tr("account.expired")
-						: pluginApi?.tr("account.expires-in", { days: root.main?.accountDaysLeft ?? 0 })
-					color: Color.mOnError
-					wrapMode: Text.Wrap
-				}
-			}
-		}
-
-		// ─── Quick toggles ───
-		ColumnLayout {
-			Layout.fillWidth: true
-			spacing: Style.marginM
-
-			NToggle {
-				Layout.fillWidth: true
-				label: pluginApi?.tr("toggles.lockdown")
-				description: pluginApi?.tr("toggles.lockdown-tooltip")
-				checked: root.main?.lockdownMode ?? false
-				onToggled: checked => root.main?.setLockdown(checked)
-			}
-
-			NToggle {
-				Layout.fillWidth: true
-				label: pluginApi?.tr("toggles.auto-connect")
-				description: pluginApi?.tr("toggles.auto-connect-tooltip")
-				checked: root.main?.autoConnect ?? false
-				onToggled: checked => root.main?.setAutoConnect(checked)
-			}
-
-			NToggle {
-				Layout.fillWidth: true
-				label: pluginApi?.tr("toggles.lan")
-				description: pluginApi?.tr("toggles.lan-tooltip")
-				checked: (root.main?.lanSharing ?? "allow") === "allow"
-				onToggled: checked => root.main?.setLanSharing(checked)
-			}
-		}
-
-		// ─── Relay picker ───
-		ColumnLayout {
-			Layout.fillWidth: true
-			spacing: Style.marginS
-
-			RowLayout {
-				Layout.fillWidth: true
-				NTextInput {
-					id: searchInput
+					text: pluginApi?.tr("panel.title")
+					pointSize: Style.fontSizeL
+					font.weight: Style.fontWeightBold
+					color: Color.mOnSurface
 					Layout.fillWidth: true
-					placeholderText: pluginApi?.tr("relay.search-placeholder")
-					onTextChanged: relayModel.refresh()
 				}
+
+				// Close button
 				NIconButton {
-					icon: "refresh"
-					tooltipText: pluginApi?.tr("action.refresh-relays")
-					onClicked: root.main?.refreshRelayList()
-				}
-			}
-
-			NButton {
-				Layout.fillWidth: true
-				text: pluginApi?.tr("action.auto-select")
-				onClicked: {
-					root.main?.setLocation("", "", "")
-					if (root.main?.relayClickConnects ?? true) root.main?.connectVpn()
-				}
-			}
-
-			NListView {
-				id: relayListView
-				Layout.fillWidth: true
-				Layout.preferredHeight: 160
-				clip: true
-				model: relayModel
-				spacing: Style.marginXXS
-				horizontalPolicy: ScrollBar.AlwaysOff
-				verticalPolicy: ScrollBar.AsNeeded
-
-				delegate: Rectangle {
-					width: relayListView.width
-					height: rowText.implicitHeight + Style.marginS * 2
-					color: rowMouse.containsMouse ? Color.mHover :
-						(model.isCurrent ? Color.mPrimary : "transparent")
-					radius: Style.radiusS
-
-					RowLayout {
-						anchors.fill: parent
-						anchors.leftMargin: Style.marginM
-						anchors.rightMargin: Style.marginM
-						spacing: Style.marginS
-
-						NText {
-							id: rowText
-							Layout.fillWidth: true
-							text: model.label
-							pointSize: Style.fontSizeS
-							color: model.isCurrent ? Color.mOnPrimary : Color.mOnSurface
-							elide: Text.ElideRight
-						}
-						NText {
-							visible: model.kind === "country"
-							text: String(model.count)
-							pointSize: Style.fontSizeXS
-							color: Color.mOnSurfaceVariant
+					icon: "close"
+					tooltipText: pluginApi?.tr("panel.close")
+					baseSize: Style.baseWidgetSize * 0.8
+					onClicked: {
+						if (pluginApi) {
+							pluginApi.closePanel(pluginApi.panelOpenScreen)
 						}
 					}
-
-					MouseArea {
-						id: rowMouse
-						anchors.fill: parent
-						hoverEnabled: true
-						cursorShape: Qt.PointingHandCursor
-						onClicked: relayModel.activate(index)
-					}
-				}
-
-				NText {
-					visible: relayModel.count === 0
-					anchors.centerIn: parent
-					text: (root.main?.relayList?.length ?? 0) === 0
-						? pluginApi?.tr("relay.loading")
-						: pluginApi?.tr("relay.no-results")
-					color: Color.mOnSurfaceVariant
 				}
 			}
 		}
 
-		// ─── Advanced (collapsed) ───
-		NCollapsible {
+		// Scrollable content area
+		ScrollView {
+			id: scrollView
 			Layout.fillWidth: true
-			label: pluginApi?.tr("advanced.title")
-			expanded: false
+			Layout.fillHeight: true
+			clip: true
+			ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+			ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
 			ColumnLayout {
-				Layout.fillWidth: true
-				spacing: Style.marginXS
+				id: scrollColumn
+				width: scrollView.width
+				spacing: Style.marginM
 
-				NToggle {
+				// Connection Status Box
+				NBox {
+					id: statusBox
 					Layout.fillWidth: true
-					label: pluginApi?.tr("advanced.multihop")
-					description: pluginApi?.tr("advanced.multihop-tooltip")
-					checked: root.main?.multihop ?? false
-					onToggled: checked => root.main?.setMultihop(checked)
+					Layout.preferredHeight: statusLayout.implicitHeight + Style.margin2M
+
+					ColumnLayout {
+						id: statusLayout
+						anchors.fill: parent
+						anchors.margins: Style.marginM
+						spacing: Style.marginM
+
+						NLabel {
+							label: root._stateLabel()
+							Layout.leftMargin: Style.marginXS
+						}
+
+						RowLayout {
+							visible: !!(root.main?.currentLocation?.ipv4)
+							spacing: Style.marginXS
+							Layout.leftMargin: Style.marginS
+
+							NText {
+								text: root.main?.currentLocation?.ipv4 || ""
+								font.family: Settings.data.ui.fontFixed
+								pointSize: Style.fontSizeS
+								color: Color.mOnSurfaceVariant
+							}
+
+							NIconButton {
+								icon: "copy"
+								baseSize: Style.baseWidgetSize * 0.6
+								tooltipText: pluginApi?.tr("action.copy-ip")
+								onClicked: {
+									if (root.main?.currentLocation?.ipv4) {
+										Quickshell.clipboardText = root.main.currentLocation.ipv4
+										ToastService.showNotice(pluginApi?.tr("toast.title"), root.main.currentLocation.ipv4, "copy")
+									}
+								}
+							}
+						}
+
+						NText {
+							Layout.fillWidth: true
+							Layout.leftMargin: Style.marginS
+							pointSize: Style.fontSizeS
+							color: Color.mOnSurfaceVariant
+							wrapMode: Text.Wrap
+
+							readonly property var _m: root.main
+							readonly property var _loc: _m ? _m.currentLocation : null
+							readonly property var _sel: _m ? _m.relaySelection : null
+							readonly property bool _mh: _m ? _m.multihop : false
+							readonly property string _mhe: _m ? (_m.multihopEntry || "") : ""
+							readonly property string _iv: _m ? (_m.ipVersion || "any") : "any"
+							readonly property bool _ld: _m ? _m.lockdownMode : false
+							readonly property bool _ac: _m ? _m.autoConnect : false
+							readonly property string _lan: _m ? (_m.lanSharing || "allow") : "allow"
+
+							text: {
+								var parts = []
+								if (root.vpnState === "connected" && _loc && _loc.country) {
+									var s = (_loc.city || root._countryName(_loc.country))
+									if (_loc.hostname) s += " / " + _loc.hostname
+									parts.push(s)
+								} else if (_sel && _sel.country) {
+									var t = root._countryName(_sel.country)
+									if (_sel.city) t += " / " + _sel.city
+									if (_sel.hostname) t += " / " + _sel.hostname
+									parts.push(t)
+								} else {
+									parts.push(root.pluginApi?.tr("action.auto-select"))
+								}
+								if (_mh) parts.push(_mhe ? root.pluginApi?.tr("badges.multihop-via", { country: root._countryName(_mhe) }) : root.pluginApi?.tr("badges.multihop"))
+								if (_iv !== "any") parts.push(root.pluginApi?.tr("badges.ip-version", { version: _iv }))
+								if (_ld) parts.push(root.pluginApi?.tr("badges.lockdown"))
+								if (_ac) parts.push(root.pluginApi?.tr("badges.auto-connect"))
+								if (_lan === "block") parts.push(root.pluginApi?.tr("badges.lan-blocked"))
+								return parts.join(" · ")
+							}
+						}
+
+						NButton {
+							Layout.fillWidth: true
+							text: root.vpnState === "connected"
+								? pluginApi?.tr("action.disconnect")
+								: (root.vpnState === "connecting" ? pluginApi?.tr("action.cancel") : pluginApi?.tr("action.connect"))
+							enabled: root.installed
+							onClicked: root.main?.toggleVpn()
+						}
+
+						// Account expiry warning
+						NBox {
+							id: expiryWarningBox
+							visible: root.installed && root.main?.accountDaysLeft !== undefined && root.main.accountDaysLeft <= (root.main?.expiryWarningDays ?? 7)
+							Layout.fillWidth: true
+							Layout.preferredHeight: expiryText.implicitHeight + Style.margin2M
+							color: Color.mError
+
+							NText {
+								id: expiryText
+								anchors.fill: parent
+								anchors.margins: Style.marginM
+								text: (root.main?.accountDaysLeft ?? 0) <= 0
+									? pluginApi?.tr("account.expired")
+									: pluginApi?.tr("account.expires-in", { days: root.main?.accountDaysLeft ?? 0 })
+								color: Color.mOnError
+								wrapMode: Text.Wrap
+							}
+						}
+					}
 				}
 
-				NComboBox {
+				// Quick Toggles Box
+				NBox {
+					id: togglesBox
 					Layout.fillWidth: true
-					visible: root.main?.multihop ?? false
-					label: pluginApi?.tr("advanced.multihop-entry")
-					model: (root.main?.relayList || []).map(function (c) { return ({ key: c.code, name: c.country }) })
-					currentKey: root.main?.multihopEntry ?? ""
-					onSelected: key => root.main?.setMultihopEntry(key)
+					Layout.preferredHeight: togglesLayout.implicitHeight + Style.margin2M
+
+					ColumnLayout {
+						id: togglesLayout
+						anchors.fill: parent
+						anchors.margins: Style.marginM
+						spacing: Style.marginM
+
+						NLabel {
+							label: pluginApi?.tr("panel.settings")
+							Layout.leftMargin: Style.marginXS
+						}
+
+						NToggle {
+							Layout.fillWidth: true
+							label: pluginApi?.tr("toggles.lockdown")
+							description: pluginApi?.tr("toggles.lockdown-tooltip")
+							checked: root.main?.lockdownMode ?? false
+							onToggled: checked => root.main?.setLockdown(checked)
+						}
+
+						NToggle {
+							Layout.fillWidth: true
+							label: pluginApi?.tr("toggles.auto-connect")
+							description: pluginApi?.tr("toggles.auto-connect-tooltip")
+							checked: root.main?.autoConnect ?? false
+							onToggled: checked => root.main?.setAutoConnect(checked)
+						}
+
+						NToggle {
+							Layout.fillWidth: true
+							label: pluginApi?.tr("toggles.lan")
+							description: pluginApi?.tr("toggles.lan-tooltip")
+							checked: (root.main?.lanSharing ?? "allow") === "allow"
+							onToggled: checked => root.main?.setLanSharing(checked)
+						}
+					}
 				}
 
-				NComboBox {
+				// Relay Picker Box
+				NBox {
+					id: relayBox
 					Layout.fillWidth: true
-					label: pluginApi?.tr("advanced.ip-version")
-					model: [
-						{ key: "any", name: "any" },
-						{ key: "v4", name: "v4" },
-						{ key: "v6", name: "v6" }
-					]
-					currentKey: root.main?.ipVersion ?? "any"
-					onSelected: key => root.main?.setIpVersion(key)
+					Layout.preferredHeight: relayLayout.implicitHeight + Style.margin2M
+
+					ColumnLayout {
+						id: relayLayout
+						anchors.fill: parent
+						anchors.margins: Style.marginM
+						spacing: Style.marginM
+
+						NLabel {
+							label: pluginApi?.tr("panel.relays")
+							Layout.leftMargin: Style.marginXS
+						}
+
+						RowLayout {
+							Layout.fillWidth: true
+							spacing: Style.marginS
+
+							NTextInput {
+								id: searchInput
+								Layout.fillWidth: true
+								placeholderText: pluginApi?.tr("relay.search-placeholder")
+								onTextChanged: relayModel.refresh()
+							}
+
+							NIconButton {
+								icon: "refresh"
+								tooltipText: pluginApi?.tr("action.refresh-relays")
+								onClicked: root.main?.refreshRelayList()
+							}
+						}
+
+						NButton {
+							Layout.fillWidth: true
+							text: pluginApi?.tr("action.auto-select")
+							onClicked: {
+								root.main?.setLocation("", "", "")
+								if (root.main?.relayClickConnects ?? true) root.main?.connectVpn()
+							}
+						}
+
+						NListView {
+							id: relayListView
+							Layout.fillWidth: true
+							Layout.preferredHeight: 160
+							clip: true
+							model: relayModel
+							spacing: Style.marginXXS
+							horizontalPolicy: ScrollBar.AlwaysOff
+							verticalPolicy: ScrollBar.AsNeeded
+
+							delegate: NBox {
+								width: relayListView.width
+								height: Math.round(40 * Style.uiScaleRatio)
+
+								color: {
+									if (model.isCurrent) {
+										return rowMouse.containsMouse ? Qt.alpha(Color.mPrimary, 0.25) : Qt.alpha(Color.mPrimary, 0.15)
+									} else {
+										return rowMouse.containsMouse ? Qt.alpha(Color.mOnSurface, 0.08) : Color.mSurface
+									}
+								}
+
+								RowLayout {
+									anchors.fill: parent
+									anchors.leftMargin: Style.marginM
+									anchors.rightMargin: Style.marginM
+									spacing: Style.marginS
+
+									NText {
+										id: rowText
+										Layout.fillWidth: true
+										text: model.label
+										pointSize: Style.fontSizeS
+										color: model.isCurrent ? Color.mPrimary : Color.mOnSurface
+										elide: Text.ElideRight
+									}
+
+									NText {
+										visible: model.kind === "country"
+										text: String(model.count)
+										pointSize: Style.fontSizeXS
+										color: Color.mOnSurfaceVariant
+									}
+								}
+
+								MouseArea {
+									id: rowMouse
+									anchors.fill: parent
+									hoverEnabled: true
+									cursorShape: Qt.PointingHandCursor
+									onClicked: relayModel.activate(index)
+								}
+							}
+
+							NText {
+								visible: relayModel.count === 0
+								anchors.centerIn: parent
+								text: (root.main?.relayList?.length ?? 0) === 0
+									? pluginApi?.tr("relay.loading")
+									: pluginApi?.tr("relay.no-results")
+								color: Color.mOnSurfaceVariant
+							}
+						}
+					}
+				}
+
+				// Advanced Box
+				NCollapsible {
+					Layout.fillWidth: true
+					label: pluginApi?.tr("advanced.title")
+					expanded: false
+					contentSpacing: Style.marginM
+
+					NToggle {
+						Layout.fillWidth: true
+						label: pluginApi?.tr("advanced.multihop")
+						description: pluginApi?.tr("advanced.multihop-tooltip")
+						checked: root.main?.multihop ?? false
+						onToggled: checked => root.main?.setMultihop(checked)
+					}
+
+					NComboBox {
+						Layout.fillWidth: true
+						visible: root.main?.multihop ?? false
+						label: pluginApi?.tr("advanced.multihop-entry")
+						model: (root.main?.relayList || []).map(function (c) { return ({ key: c.code, name: c.country }) })
+						currentKey: root.main?.multihopEntry ?? ""
+						onSelected: key => root.main?.setMultihopEntry(key)
+					}
+
+					NComboBox {
+						Layout.fillWidth: true
+						label: pluginApi?.tr("advanced.ip-version")
+						model: [
+							{ key: "any", name: "any" },
+							{ key: "v4", name: "v4" },
+							{ key: "v6", name: "v6" }
+						]
+						currentKey: root.main?.ipVersion ?? "any"
+						onSelected: key => root.main?.setIpVersion(key)
+					}
 				}
 			}
 		}
