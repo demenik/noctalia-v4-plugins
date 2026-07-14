@@ -422,54 +422,92 @@ Item {
 						NListView {
 							id: relayListView
 							Layout.fillWidth: true
-							Layout.preferredHeight: 160
+							Layout.preferredHeight: Math.round(240 * Style.uiScaleRatio)
 							clip: true
 							model: relayModel
-							spacing: Style.marginXXS
+							spacing: 0
 							horizontalPolicy: ScrollBar.AlwaysOff
 							verticalPolicy: ScrollBar.AsNeeded
+							reserveScrollbarSpace: false
 
-							delegate: NBox {
+							delegate: Item {
+								id: delegateRoot
 								width: relayListView.width
-								height: Math.round(40 * Style.uiScaleRatio)
+								height: Math.round(40 * Style.uiScaleRatio) + Style.marginXS
 
-								color: {
-									if (model.isCurrent) {
-										return rowMouse.containsMouse ? Qt.alpha(Color.mPrimary, 0.25) : Qt.alpha(Color.mPrimary, 0.15)
-									} else {
-										return rowMouse.containsMouse ? Qt.alpha(Color.mOnSurface, 0.08) : Color.mSurface
-									}
+								readonly property real indent: {
+									if (model.kind === "city") return Style.marginM
+									if (model.kind === "host") return Style.marginM * 2
+									return 0
 								}
 
-								RowLayout {
-									anchors.fill: parent
-									anchors.leftMargin: Style.marginM
-									anchors.rightMargin: Style.marginM
-									spacing: Style.marginS
-
-									NText {
-										id: rowText
-										Layout.fillWidth: true
-										text: model.label
-										pointSize: Style.fontSizeS
-										color: model.isCurrent ? Color.mPrimary : Color.mOnSurface
-										elide: Text.ElideRight
-									}
-
-									NText {
-										visible: model.kind === "country"
-										text: String(model.count)
-										pointSize: Style.fontSizeXS
-										color: Color.mOnSurfaceVariant
-									}
+								// Indentation tree guide lines
+								Rectangle {
+									visible: delegateRoot.indent >= Style.marginM
+									x: Math.round(4 * Style.uiScaleRatio)
+									width: Style.borderS
+									anchors.top: parent.top
+									anchors.bottom: parent.bottom
+									color: Qt.alpha(Color.mOutline, 0.3)
 								}
 
-								MouseArea {
-									id: rowMouse
-									anchors.fill: parent
-									hoverEnabled: true
-									cursorShape: Qt.PointingHandCursor
-									onClicked: relayModel.activate(index)
+								Rectangle {
+									visible: delegateRoot.indent >= Style.marginM * 2
+									x: Style.marginM + Math.round(4 * Style.uiScaleRatio)
+									width: Style.borderS
+									anchors.top: parent.top
+									anchors.bottom: parent.bottom
+									color: Qt.alpha(Color.mOutline, 0.3)
+								}
+
+								NBox {
+									x: delegateRoot.indent
+									width: delegateRoot.width - delegateRoot.indent
+									anchors.top: parent.top
+									height: Math.round(40 * Style.uiScaleRatio)
+
+									color: {
+										if (model.isCurrent) {
+											return rowMouse.containsMouse ? Qt.alpha(Color.mPrimary, 0.25) : Qt.alpha(Color.mPrimary, 0.15)
+										} else {
+											return rowMouse.containsMouse ? Qt.alpha(Color.mOnSurface, 0.08) : Color.mSurface
+										}
+									}
+
+									RowLayout {
+										anchors.fill: parent
+										anchors.leftMargin: Style.marginL
+										anchors.rightMargin: Style.marginL
+										spacing: Style.marginS
+
+										NText {
+											id: rowText
+											Layout.fillWidth: true
+											text: model.flag + (model.flag.trim().length > 0 ? "  " : "") + model.label.trim()
+											pointSize: Style.fontSizeS
+											color: model.isCurrent ? Color.mPrimary : Color.mOnSurface
+											elide: Text.ElideRight
+											Layout.alignment: Qt.AlignVCenter
+											verticalAlignment: Text.AlignVCenter
+										}
+
+										NText {
+											visible: model.kind === "country"
+											text: String(model.count)
+											pointSize: Style.fontSizeXS
+											color: Color.mOnSurfaceVariant
+											Layout.alignment: Qt.AlignVCenter
+											verticalAlignment: Text.AlignVCenter
+										}
+									}
+
+									MouseArea {
+										id: rowMouse
+										anchors.fill: parent
+										hoverEnabled: true
+										cursorShape: Qt.PointingHandCursor
+										onClicked: relayModel.activate(index)
+									}
 								}
 							}
 
@@ -537,8 +575,8 @@ Item {
 					if (!matches(c, ci, null) && !ci.hostnames.some(function (h) { return matches(c, ci, h) })) continue
 					append({
 						"kind": "city",
-						"flag": "  " + root._flag(c.code),
-						"label": "  " + ci.city,
+						"flag": root._flag(c.code),
+						"label": ci.city,
 						"countryCode": c.code,
 						"cityCode": ci.code,
 						"hostname": "",
@@ -550,8 +588,8 @@ Item {
 						if (!matches(c, ci, h)) continue
 						append({
 							"kind": "host",
-							"flag": "    ",
-							"label": "    " + h.name + "  " + h.ipv4,
+							"flag": "",
+							"label": h.name + "  " + h.ipv4,
 							"countryCode": c.code,
 							"cityCode": ci.code,
 							"hostname": h.name,
