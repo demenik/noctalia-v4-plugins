@@ -24,6 +24,76 @@ Item {
 		source: "fonts/twemoji.ttf"
 	}
 
+	// State for expanded/collapsed countries and cities (separate tracks for normal vs search mode)
+	property var _expandedCountries: []
+	property var _expandedCities: []
+	property var _collapsedCountries: []
+	property var _collapsedCities: []
+
+	function isCountryExpanded(code, hasQuery) {
+		if (hasQuery) {
+			return _collapsedCountries.indexOf(code) === -1
+		} else {
+			return _expandedCountries.indexOf(code) !== -1
+		}
+	}
+
+	function toggleCountry(code, hasQuery) {
+		if (hasQuery) {
+			var idx = _collapsedCountries.indexOf(code)
+			var arr = _collapsedCountries.slice()
+			if (idx === -1) {
+				arr.push(code)
+			} else {
+				arr.splice(idx, 1)
+			}
+			_collapsedCountries = arr
+		} else {
+			var idx = _expandedCountries.indexOf(code)
+			var arr = _expandedCountries.slice()
+			if (idx === -1) {
+				arr.push(code)
+			} else {
+				arr.splice(idx, 1)
+			}
+			_expandedCountries = arr
+		}
+		relayModel.refresh()
+	}
+
+	function isCityExpanded(countryCode, cityCode, hasQuery) {
+		var key = countryCode + "/" + cityCode
+		if (hasQuery) {
+			return _collapsedCities.indexOf(key) === -1
+		} else {
+			return _expandedCities.indexOf(key) !== -1
+		}
+	}
+
+	function toggleCity(countryCode, cityCode, hasQuery) {
+		var key = countryCode + "/" + cityCode
+		if (hasQuery) {
+			var idx = _collapsedCities.indexOf(key)
+			var arr = _collapsedCities.slice()
+			if (idx === -1) {
+				arr.push(key)
+			} else {
+				arr.splice(idx, 1)
+			}
+			_collapsedCities = arr
+		} else {
+			var idx = _expandedCities.indexOf(key)
+			var arr = _expandedCities.slice()
+			if (idx === -1) {
+				arr.push(key)
+			} else {
+				arr.splice(idx, 1)
+			}
+			_expandedCities = arr
+		}
+		relayModel.refresh()
+	}
+
 	property string currentView: "main" // "main" | "settings"
 
 	property real contentPreferredWidth: 380 * Style.uiScaleRatio
@@ -503,11 +573,52 @@ Item {
 										}
 									}
 
+									MouseArea {
+										id: rowMouse
+										anchors.fill: parent
+										hoverEnabled: true
+										cursorShape: Qt.PointingHandCursor
+										onClicked: relayModel.activate(index)
+									}
+
 									RowLayout {
 										anchors.fill: parent
 										anchors.leftMargin: Style.marginL
 										anchors.rightMargin: Style.marginL
 										spacing: Style.marginS
+
+										NIconButton {
+											id: expandButton
+											visible: model.kind === "country" || model.kind === "city"
+											icon: isExpanded ? "chevron-down" : "chevron-right"
+											baseSize: Style.baseWidgetSize * 0.7
+											Layout.preferredWidth: visible ? expandButton.buttonSize : 0
+											Layout.preferredHeight: expandButton.buttonSize
+											Layout.alignment: Qt.AlignVCenter
+
+											colorBg: "transparent"
+											colorBgHover: Qt.alpha(Color.mPrimary, 0.15)
+											colorBorder: "transparent"
+											colorBorderHover: "transparent"
+											colorFg: Color.mOnSurfaceVariant
+											colorFgHover: Color.mPrimary
+
+											readonly property bool isExpanded: {
+												var hasQuery = (searchInput.text || "").toLowerCase().trim().length > 0
+												if (model.kind === "country") return root.isCountryExpanded(model.countryCode, hasQuery)
+												if (model.kind === "city") return root.isCityExpanded(model.countryCode, model.cityCode, hasQuery)
+												return false
+											}
+
+											onClicked: {
+												var hasQuery = (searchInput.text || "").toLowerCase().trim().length > 0
+												if (model.kind === "country") {
+													root.toggleCountry(model.countryCode, hasQuery)
+												} else if (model.kind === "city") {
+													root.toggleCity(model.countryCode, model.cityCode, hasQuery)
+												}
+											}
+										}
 
 										Text {
 											id: listFlagText
@@ -540,14 +651,6 @@ Item {
 											verticalAlignment: Text.AlignVCenter
 										}
 									}
-
-									MouseArea {
-										id: rowMouse
-										anchors.fill: parent
-										hoverEnabled: true
-										cursorShape: Qt.PointingHandCursor
-										onClicked: relayModel.activate(index)
-									}
 								}
 							}
 
@@ -570,8 +673,19 @@ Item {
 		id: relayModel
 
 		function refresh() {
+			var oldY = 0
+			var hasListView = typeof relayListView !== "undefined" && relayListView !== null
+			if (hasListView) {
+				oldY = relayListView.contentY
+				relayListView.contentY = 0
+			}
+
 			clear()
 			var query = (searchInput.text || "").toLowerCase().trim()
+			if (!query) {
+				if (_collapsedCountries.length > 0) _collapsedCountries = []
+				if (_collapsedCities.length > 0) _collapsedCities = []
+			}
 			var rl = root.main?.relayList || []
 			var fav = root.main?.favoriteCountries || []
 			var sel = root.main?.relaySelection || { country: "", city: "", hostname: "" }
@@ -608,7 +722,8 @@ Item {
 					"isCurrent": sel.country === c.code && !sel.city
 				})
 
-				if (!query) continue   // collapsed by default
+				var countryExpanded = root.isCountryExpanded(c.code, !!query)
+				if (!countryExpanded) continue
 
 				for (var j = 0; j < c.cities.length; j++) {
 					var ci = c.cities[j]
@@ -623,6 +738,10 @@ Item {
 						"count": ci.hostnames.length,
 						"isCurrent": sel.country === c.code && sel.city === ci.code && !sel.hostname
 					})
+
+					var cityExpanded = root.isCityExpanded(c.code, ci.code, !!query)
+					if (!cityExpanded) continue
+
 					for (var k = 0; k < ci.hostnames.length; k++) {
 						var h = ci.hostnames[k]
 						if (!matches(c, ci, h)) continue
@@ -638,6 +757,13 @@ Item {
 						})
 					}
 				}
+			}
+
+			if (hasListView) {
+				Qt.callLater(() => {
+					var maxY = Math.max(0, relayListView.contentHeight - relayListView.height)
+					relayListView.contentY = Math.max(0, Math.min(oldY, maxY))
+				})
 			}
 		}
 
