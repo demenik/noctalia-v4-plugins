@@ -19,6 +19,11 @@ Item {
 	readonly property var geometryPlaceholder: panelContainer
 	readonly property bool allowAttach: true
 
+	FontLoader {
+		id: twemojiLoader
+		source: "fonts/twemoji.ttf"
+	}
+
 	property string currentView: "main" // "main" | "settings"
 
 	property real contentPreferredWidth: 380 * Style.uiScaleRatio
@@ -219,43 +224,67 @@ Item {
 							}
 						}
 
-						NText {
+						RowLayout {
 							Layout.fillWidth: true
 							Layout.leftMargin: Style.marginS
-							pointSize: Style.fontSizeS
-							color: Color.mOnSurfaceVariant
-							wrapMode: Text.Wrap
+							spacing: Style.marginS
 
-							readonly property var _m: root.main
-							readonly property var _loc: _m ? _m.currentLocation : null
-							readonly property var _sel: _m ? _m.relaySelection : null
-							readonly property bool _mh: _m ? _m.multihop : false
-							readonly property string _mhe: _m ? (_m.multihopEntry || "") : ""
-							readonly property string _iv: _m ? (_m.ipVersion || "any") : "any"
-							readonly property bool _ld: _m ? _m.lockdownMode : false
-							readonly property bool _ac: _m ? _m.autoConnect : false
-							readonly property string _lan: _m ? (_m.lanSharing || "allow") : "allow"
-
-							text: {
-								var parts = []
-								if (root.vpnState === "connected" && _loc && _loc.country) {
-									var s = root._flag(_loc.country) + " " + (_loc.city || root._countryName(_loc.country))
-									if (_loc.hostname) s += " / " + _loc.hostname
-									parts.push(s)
-								} else if (_sel && _sel.country) {
-									var t = root._flag(_sel.country) + " " + root._countryName(_sel.country)
-									if (_sel.city) t += " / " + _sel.city
-									if (_sel.hostname) t += " / " + _sel.hostname
-									parts.push(t)
-								} else {
-									parts.push(root.pluginApi?.tr("action.auto-select"))
+							Text {
+								id: statusFlagText
+								readonly property string countryCode: {
+									var _m = root.main
+									var _loc = _m ? _m.currentLocation : null
+									var _sel = _m ? _m.relaySelection : null
+									if (root.vpnState === "connected" && _loc && _loc.country) return _loc.country
+									if (_sel && _sel.country) return _sel.country
+									return ""
 								}
-								if (_mh) parts.push(_mhe ? root.pluginApi?.tr("badges.multihop-via", { country: root._countryName(_mhe) }) : root.pluginApi?.tr("badges.multihop"))
-								if (_iv !== "any") parts.push(root.pluginApi?.tr("badges.ip-version", { version: _iv }))
-								if (_ld) parts.push(root.pluginApi?.tr("badges.lockdown"))
-								if (_ac) parts.push(root.pluginApi?.tr("badges.auto-connect"))
-								if (_lan === "block") parts.push(root.pluginApi?.tr("badges.lan-blocked"))
-								return parts.join(" · ")
+								visible: countryCode !== ""
+								text: root._flag(countryCode)
+								font.pixelSize: Math.round(16 * Style.uiScaleRatio)
+								font.family: twemojiLoader.status === FontLoader.Ready ? twemojiLoader.name : ""
+								color: Color.mOnSurface
+								Layout.alignment: Qt.AlignVCenter
+								verticalAlignment: Text.AlignVCenter
+							}
+
+							NText {
+								Layout.fillWidth: true
+								pointSize: Style.fontSizeS
+								color: Color.mOnSurfaceVariant
+								wrapMode: Text.Wrap
+
+								readonly property var _m: root.main
+								readonly property var _loc: _m ? _m.currentLocation : null
+								readonly property var _sel: _m ? _m.relaySelection : null
+								readonly property bool _mh: _m ? _m.multihop : false
+								readonly property string _mhe: _m ? (_m.multihopEntry || "") : ""
+								readonly property string _iv: _m ? (_m.ipVersion || "any") : "any"
+								readonly property bool _ld: _m ? _m.lockdownMode : false
+								readonly property bool _ac: _m ? _m.autoConnect : false
+								readonly property string _lan: _m ? (_m.lanSharing || "allow") : "allow"
+
+								text: {
+									var parts = []
+									if (root.vpnState === "connected" && _loc && _loc.country) {
+										var s = (_loc.city || root._countryName(_loc.country))
+										if (_loc.hostname) s += " / " + _loc.hostname
+										parts.push(s)
+									} else if (_sel && _sel.country) {
+										var t = root._countryName(_sel.country)
+										if (_sel.city) t += " / " + _sel.city
+										if (_sel.hostname) t += " / " + _sel.hostname
+										parts.push(t)
+									} else {
+										parts.push(root.pluginApi?.tr("action.auto-select"))
+									}
+									if (_mh) parts.push(_mhe ? root.pluginApi?.tr("badges.multihop-via", { country: root._countryName(_mhe) }) : root.pluginApi?.tr("badges.multihop"))
+									if (_iv !== "any") parts.push(root.pluginApi?.tr("badges.ip-version", { version: _iv }))
+									if (_ld) parts.push(root.pluginApi?.tr("badges.lockdown"))
+									if (_ac) parts.push(root.pluginApi?.tr("badges.auto-connect"))
+									if (_lan === "block") parts.push(root.pluginApi?.tr("badges.lan-blocked"))
+									return parts.join(" · ")
+								}
 							}
 						}
 
@@ -480,10 +509,21 @@ Item {
 										anchors.rightMargin: Style.marginL
 										spacing: Style.marginS
 
+										Text {
+											id: listFlagText
+											visible: model.flag.trim().length > 0
+											text: model.flag.trim()
+											font.pixelSize: Math.round(16 * Style.uiScaleRatio)
+											font.family: twemojiLoader.status === FontLoader.Ready ? twemojiLoader.name : ""
+											color: Color.mOnSurface
+											Layout.alignment: Qt.AlignVCenter
+											verticalAlignment: Text.AlignVCenter
+										}
+
 										NText {
 											id: rowText
 											Layout.fillWidth: true
-											text: model.flag + (model.flag.trim().length > 0 ? "  " : "") + model.label.trim()
+											text: model.label.trim()
 											pointSize: Style.fontSizeS
 											color: model.isCurrent ? Color.mPrimary : Color.mOnSurface
 											elide: Text.ElideRight
