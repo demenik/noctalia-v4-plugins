@@ -89,7 +89,7 @@ Item {
             "name": ">obs",
             "description": pluginApi?.tr("launcher.command.description"),
             "icon": "obsidian",
-            "isTablerIcon": true,
+            "isTablerIcon": false,
             "isImage": false,
             "onActivate": function() {
                 launcher.setSearchText(">obs ");

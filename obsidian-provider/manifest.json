@@ -1,7 +1,7 @@
 {
   "id": "obsidian-provider",
   "name": "Obsidian Provider",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Switch between Obsidian vaults from the launcher.",
   "tags": ["Launcher", "Productivity"],
   "minNoctaliaVersion": "4.5.0",
