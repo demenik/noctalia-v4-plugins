@@ -13,25 +13,27 @@ Item {
   property var pluginApi: null
   property var _popupWindow: null
   property bool _xdphMode: false
+  property bool _allowToken: false
 
   IpcHandler {
     id: ipcHandler
     target: "plugin:screencast-picker"
 
     function showScreensharePicker(): void {
-      root.showScreensharePicker("");
+      root.showScreensharePicker("", false);
     }
 
-    function showScreensharePickerForXdph(xdphWindows: string): void {
-      root.showScreensharePicker(xdphWindows);
+    function showScreensharePickerForXdph(xdphWindows: string, allowToken: string): void {
+      root.showScreensharePicker(xdphWindows, allowToken === "1");
     }
 
     signal popupClosed(result: string);
   }
 
-  function showScreensharePicker(xdphWindows) {
+  function showScreensharePicker(xdphWindows, allowToken) {
     if (!pluginApi) return;
     root._xdphMode = false;
+    root._allowToken = allowToken === true;
     if (!xdphWindows || xdphWindows === "") {
       xdphWindows = Quickshell.env("XDPH_WINDOW_SHARING_LIST") || "";
     }
@@ -54,10 +56,12 @@ Item {
     if (root._popupWindow) {
       root._popupWindow.visible = false;
     }
-    if (root._xdphMode && result !== "cancelled")
-      ipcHandler.popupClosed("[SELECTION]/" + result);
-    else
+    if (root._xdphMode && result !== "cancelled") {
+      var prefix = root._allowToken ? "r/" : "/";
+      ipcHandler.popupClosed("[SELECTION]" + prefix + result);
+    } else {
       ipcHandler.popupClosed(result);
+    }
   }
 
   Component {

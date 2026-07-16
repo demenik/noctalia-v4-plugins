@@ -17,7 +17,14 @@ if [ -z "$SHELL_BIN" ]; then
 fi
 
 if [ -n "$XDPH_WINDOW_SHARING_LIST" ]; then
-  "$SHELL_BIN" ipc call plugin:screencast-picker showScreensharePickerForXdph "$XDPH_WINDOW_SHARING_LIST" 2>/dev/null &
+  ALLOW_TOKEN="0"
+  for _arg in "$@"; do
+    if [ "$_arg" = "--allow-token" ]; then
+      ALLOW_TOKEN="1"
+      break
+    fi
+  done
+  "$SHELL_BIN" ipc call plugin:screencast-picker showScreensharePickerForXdph "$XDPH_WINDOW_SHARING_LIST" "$ALLOW_TOKEN" 2>/dev/null &
 else
   "$SHELL_BIN" ipc call plugin:screencast-picker showScreensharePicker 2>/dev/null &
 fi

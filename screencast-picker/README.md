@@ -71,12 +71,16 @@ populated from the env var instead of `hyprctl`, and the output conforms to
 the `hyprland-share-picker` format (`[SELECTION]/screen:<name>`/`[SELECTION]/window:<id>`).
 
 The bundled wrapper script `scripts/pick.sh` bridges XDPH → IPC → stdout.
+It also forwards the `--allow-token` flag so `allow_token_by_default` in
+`xdph.conf` works correctly.
+
 Configure XDPH to use it (adjust the path to your installation):
 
 ```ini
 # ~/.config/hypr/xdph.conf
 screencopy {
   custom_picker_binary = /home/youruser/.config/noctalia/plugins/563115:screencast-picker/scripts/pick.sh
+  allow_token_by_default = true
 }
 ```
 
