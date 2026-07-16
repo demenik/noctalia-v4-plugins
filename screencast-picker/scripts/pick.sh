@@ -11,10 +11,6 @@ if [ -z "$SHELL_BIN" ]; then
     fi
   done
 fi
-if [ -z "$SHELL_BIN" ]; then
-  echo "screencast-picker: noctalia-shell not found. Set NOCTALIA_SHELL env var or add it to PATH." >&2
-  exit 1
-fi
 
 if [ -n "$XDPH_WINDOW_SHARING_LIST" ]; then
   ALLOW_TOKEN="0"
@@ -24,8 +20,27 @@ if [ -n "$XDPH_WINDOW_SHARING_LIST" ]; then
       break
     fi
   done
-  "$SHELL_BIN" ipc call plugin:screencast-picker showScreensharePickerForXdph "$XDPH_WINDOW_SHARING_LIST" "$ALLOW_TOKEN" 2>/dev/null &
-else
-  "$SHELL_BIN" ipc call plugin:screencast-picker showScreensharePicker 2>/dev/null &
+
+  # Try plugin picker; fallback to hyprland-share-picker on immediate failure
+  if [ -n "$SHELL_BIN" ]; then
+    "$SHELL_BIN" ipc call plugin:screencast-picker showScreensharePickerForXdph \
+      "$XDPH_WINDOW_SHARING_LIST" "$ALLOW_TOKEN" 2>/dev/null &
+    PLUGIN_RESULT=$("$SHELL_BIN" ipc wait plugin:screencast-picker popupClosed 2>/dev/null)
+    case "$PLUGIN_RESULT" in
+    "[SELECTION]"*)
+      echo "$PLUGIN_RESULT"
+      exit 0
+      ;;
+    esac
+  fi
+
+  exec hyprland-share-picker "$@"
 fi
-"$SHELL_BIN" ipc wait plugin:screencast-picker popupClosed 2>/dev/null
+
+# Non-XDPH mode (standalone usage)
+if [ -z "$SHELL_BIN" ]; then
+  echo "screencast-picker: noctalia-shell not found. Set NOCTALIA_SHELL env var or add it to PATH." >&2
+  exit 1
+fi
+"$SHELL_BIN" ipc call plugin:screencast-picker showScreensharePicker 2>/dev/null &
+exec "$SHELL_BIN" ipc wait plugin:screencast-picker popupClosed 2>/dev/null

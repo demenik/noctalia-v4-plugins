@@ -72,7 +72,9 @@ the `hyprland-share-picker` format (`[SELECTION]/screen:<name>`/`[SELECTION]/win
 
 The bundled wrapper script `scripts/pick.sh` bridges XDPH → IPC → stdout.
 It also forwards the `--allow-token` flag so `allow_token_by_default` in
-`xdph.conf` works correctly.
+`xdph.conf` works correctly. If the plugin fails or is unreachable (e.g.
+Noctalia Shell not running), the script falls back to
+`hyprland-share-picker` directly.
 
 Configure XDPH to use it (adjust the path to your installation):
 
