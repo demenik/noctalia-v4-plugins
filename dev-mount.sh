@@ -3,6 +3,7 @@
 TARGET_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/noctalia/plugins"
 WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="/tmp/noctalia-plugins-backup-$$"
+PLUGIN_PREFIX="563115:"
 
 declare -a LINKED_ITEMS
 declare -a BACKED_UP_ITEMS
@@ -13,9 +14,9 @@ cleanup() {
   echo -e "\n\n[+] Terminating script. Restoring previous state..."
 
   for entry in "${LINKED_ITEMS[@]}"; do
-    plugin_name="${entry%%:*}"
-    item_name="${entry#*:}"
-    target_item_path="$TARGET_DIR/$plugin_name/$item_name"
+    plugin_name="${entry%%|*}"
+    item_name="${entry#*|}"
+    target_item_path="$TARGET_DIR/${PLUGIN_PREFIX}$plugin_name/$item_name"
 
     if [ -L "$target_item_path" ]; then
       echo "[-] Removing symlink: $plugin_name/$item_name"
@@ -24,9 +25,9 @@ cleanup() {
   done
 
   for entry in "${COPIED_ITEMS[@]}"; do
-    plugin_name="${entry%%:*}"
-    item_name="${entry#*:}"
-    target_item_path="$TARGET_DIR/$plugin_name/$item_name"
+    plugin_name="${entry%%|*}"
+    item_name="${entry#*|}"
+    target_item_path="$TARGET_DIR/${PLUGIN_PREFIX}$plugin_name/$item_name"
 
     if [ -f "$target_item_path" ]; then
       echo "[-] Removing copied file: $plugin_name/$item_name"
@@ -35,9 +36,9 @@ cleanup() {
   done
 
   for entry in "${BACKED_UP_ITEMS[@]}"; do
-    plugin_name="${entry%%:*}"
-    item_name="${entry#*:}"
-    target_item_path="$TARGET_DIR/$plugin_name/$item_name"
+    plugin_name="${entry%%|*}"
+    item_name="${entry#*|}"
+    target_item_path="$TARGET_DIR/${PLUGIN_PREFIX}$plugin_name/$item_name"
     backup_item_path="$BACKUP_DIR/$plugin_name/$item_name"
 
     if [ -e "$backup_item_path" ] || [ -L "$backup_item_path" ]; then
@@ -47,8 +48,8 @@ cleanup() {
   done
 
   for entry in "${LINKED_ITEMS[@]}"; do
-    plugin_name="${entry%%:*}"
-    target_plugin_dir="$TARGET_DIR/$plugin_name"
+    plugin_name="${entry%%|*}"
+    target_plugin_dir="$TARGET_DIR/${PLUGIN_PREFIX}$plugin_name"
     if [ -d "$target_plugin_dir" ] && [ -z "$(ls -A "$target_plugin_dir")" ]; then
       echo "[-] Removing empty target plugin dir: $plugin_name"
       rmdir "$target_plugin_dir"
@@ -87,7 +88,7 @@ while IFS= read -r -d '' manifest_path; do
   fi
 
   echo "[+] Found plugin in workspace: $plugin_name"
-  target_plugin_dir="$TARGET_DIR/$plugin_name"
+  target_plugin_dir="$TARGET_DIR/${PLUGIN_PREFIX}$plugin_name"
   mkdir -p "$target_plugin_dir"
 
   while IFS= read -r -d '' item; do
@@ -106,7 +107,7 @@ while IFS= read -r -d '' manifest_path; do
       else
         echo "[+] Copying default settings.json for: $plugin_name"
         cp "$item" "$target_item_path"
-        COPIED_ITEMS+=("$plugin_name:$item_name")
+        COPIED_ITEMS+=("$plugin_name|$item_name")
       fi
       continue
     fi
@@ -115,12 +116,12 @@ while IFS= read -r -d '' manifest_path; do
       echo "[+] Backing up: $plugin_name/$item_name -> $backup_item_path"
       mkdir -p "$BACKUP_DIR/$plugin_name"
       mv "$target_item_path" "$backup_item_path"
-      BACKED_UP_ITEMS+=("$plugin_name:$item_name")
+      BACKED_UP_ITEMS+=("$plugin_name|$item_name")
     fi
 
     echo "[+] Symlinking: $plugin_name/$item_name"
     ln -s "$item" "$target_item_path"
-    LINKED_ITEMS+=("$plugin_name:$item_name")
+    LINKED_ITEMS+=("$plugin_name|$item_name")
 
   done < <(find "$plugin_dir" -mindepth 1 -maxdepth 1 -print0)
 
