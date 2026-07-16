@@ -1,0 +1,15 @@
+{
+  "popup": {
+    "title": "Screencast Picker",
+    "selectSource": "Select a screen or window to share",
+    "tab": {
+      "screens": "Screens",
+      "windows": "Windows"
+    },
+    "type": {
+      "screen": "Screen",
+      "window": "Window"
+    },
+    "close": "Cancel"
+  }
+}
