@@ -12,29 +12,41 @@ Item {
 
   property var pluginApi: null
   property var _popupWindow: null
+  property bool _xdphMode: false
 
   IpcHandler {
     id: ipcHandler
     target: "plugin:screencast-picker"
 
     function showScreensharePicker(): void {
-      root.showScreensharePicker();
+      root.showScreensharePicker("");
+    }
+
+    function showScreensharePickerForXdph(xdphWindows: string): void {
+      root.showScreensharePicker(xdphWindows);
     }
 
     signal popupClosed(result: string);
   }
 
-  function showScreensharePicker() {
+  function showScreensharePicker(xdphWindows) {
     if (!pluginApi) return;
+    root._xdphMode = false;
+    if (!xdphWindows || xdphWindows === "") {
+      xdphWindows = Quickshell.env("XDPH_WINDOW_SHARING_LIST") || "";
+    }
+    if (xdphWindows !== "")
+      root._xdphMode = true;
     pluginApi.withCurrentScreen(function(screen) {
       if (!root._popupWindow) {
         root._popupWindow = popupComponent.createObject(null, {
           "pluginApi": root.pluginApi
         });
       }
+      root._popupWindow.xdphMode = root._xdphMode;
       root._popupWindow.screen = screen;
       root._popupWindow.visible = true;
-      root._popupWindow.refreshSources();
+      root._popupWindow.refreshSources(xdphWindows);
     });
   }
 
@@ -42,7 +54,10 @@ Item {
     if (root._popupWindow) {
       root._popupWindow.visible = false;
     }
-    ipcHandler.popupClosed(result);
+    if (root._xdphMode && result !== "cancelled")
+      ipcHandler.popupClosed("[SELECTION]/" + result);
+    else
+      ipcHandler.popupClosed(result);
   }
 
   Component {
@@ -52,6 +67,7 @@ Item {
       id: popupWin
 
       property var pluginApi: null
+      property bool xdphMode: false
 
       property string _activeTab: "screens"
       property var _screensCache: []
@@ -78,7 +94,31 @@ Item {
         cleanupProc.exec();
       }
 
-      function refreshSources() {
+      function parseXdphWindowList(raw) {
+        if (!raw) return;
+        var entries = raw.split("[HE>]");
+        for (var i = 0; i < entries.length; i++) {
+          var entry = entries[i].trim();
+          if (!entry) continue;
+          var parts = entry.split("[HC>]");
+          if (parts.length < 2) continue;
+          var id = parts[0];
+          var haPos = id.indexOf("[HA>]");
+          if (haPos >= 0)
+            id = id.substring(haPos + 5);
+          var titleParts = parts[1].split("[HT>]");
+          var cls = titleParts[0];
+          var title = titleParts.length > 1 ? titleParts.slice(1).join("[HT>]") : "";
+          popupWin._windowsCache.push({
+            type: "window",
+            sourceId: id,
+            label: title || cls,
+            subtitle: cls
+          });
+        }
+      }
+
+      function refreshSources(xdphWindows) {
         var screens = [];
         for (var i = 0; i < Quickshell.screens.length; i++) {
           var s = Quickshell.screens[i];
@@ -94,8 +134,13 @@ Item {
         popupWin._previews = ({});
         popupWin._activeTab = "screens";
         popupWin.rebuildModel();
-        popupWin.fetchWindows();
-        popupWin.capturePreviews();
+        if (popupWin.xdphMode) {
+          popupWin.parseXdphWindowList(xdphWindows);
+          popupWin.fetchWindows();
+        } else {
+          popupWin.fetchWindows();
+          popupWin.capturePreviews();
+        }
       }
 
       function rebuildModel() {
@@ -112,7 +157,7 @@ Item {
         if (CompositorService.isHyprland) {
           winFetchProc.exec({
             command: ["bash", "-c",
-              "hyprctl clients -j 2>/dev/null | jq -c '.[] | select(.mapped == true) | {a:.address, t:.title, c:.class}' 2>/dev/null"
+              "hyprctl clients -j 2>/dev/null | jq -c '.[] | select(.mapped == true) | {a:.address, t:.title, c:.class, s:.stableId}' 2>/dev/null"
             ]
           });
         } else if (CompositorService.isNiri) {
@@ -131,6 +176,32 @@ Item {
           var raw = String(winFetchProc.stdout.text || "").trim();
           if (!raw) return;
           var lines = raw.split("\n");
+
+          if (popupWin.xdphMode) {
+            // Build lookup from hyprctl output: (class, title) -> stableId
+            var lookup = {};
+            for (var i = 0; i < lines.length; i++) {
+              var line = lines[i].trim();
+              if (!line || line[0] !== "{") continue;
+              try {
+                var obj = JSON.parse(line);
+                if (obj.c && obj.t && obj.s) {
+                  var key = obj.c + "|" + obj.t;
+                  if (!lookup[key]) lookup[key] = obj.s;
+                }
+              } catch (e) {}
+            }
+            // Match XDPH cache entries by (subtitle, label) = (class, title)
+            for (var i = 0; i < popupWin._windowsCache.length; i++) {
+              var entry = popupWin._windowsCache[i];
+              var key = (entry.subtitle || "") + "|" + (entry.label || "");
+              if (lookup[key])
+                entry._hyprctlStableId = lookup[key];
+            }
+            popupWin.capturePreviews();
+            return;
+          }
+
           var windows = popupWin._windowsCache.slice();
           for (var i = 0; i < lines.length; i++) {
             var line = lines[i].trim();
@@ -179,12 +250,25 @@ Item {
           c += "printf 'screen:%s\\t%s\\n' " + n + " /tmp/screencast-picker/" + n + ".png\n";
         }
 
-        c += "hyprctl clients -j 2>/dev/null | jq -r " +
-          "'.[] | select(.mapped == true) | \"\\(.address)\\t\\(.stableId)\"' | " +
-          "while IFS=$'\\t' read -r addr stableId; do ";
-        c += "grim -T \"$stableId\" \"/tmp/screencast-picker/$addr.png\" 2>/dev/null; ";
-        c += "printf 'window:%s\\t%s\\n' \"$addr\" \"/tmp/screencast-picker/$addr.png\"; ";
-        c += "done\n";
+        if (popupWin.xdphMode) {
+          // Match XDPH window IDs to compositor stableId via (class,title)
+          for (var i = 0; i < popupWin._windowsCache.length; i++) {
+            var w = popupWin._windowsCache[i];
+            if (w._hyprctlStableId) {
+              c += "grim -T \"" + w._hyprctlStableId + "\" " +
+                "\"/tmp/screencast-picker/" + w.sourceId + ".png\" 2>/dev/null; ";
+              c += "printf 'window:%s\\t%s\\n' " + w.sourceId +
+                " /tmp/screencast-picker/" + w.sourceId + ".png\n";
+            }
+          }
+        } else {
+          c += "hyprctl clients -j 2>/dev/null | jq -r " +
+            "'.[] | select(.mapped == true) | \"\\(.address)\\t\\(.stableId)\"' | " +
+            "while IFS=$'\\t' read -r addr stableId; do ";
+          c += "grim -T \"$stableId\" \"/tmp/screencast-picker/$addr.png\" 2>/dev/null; ";
+          c += "printf 'window:%s\\t%s\\n' \"$addr\" \"/tmp/screencast-picker/$addr.png\"; ";
+          c += "done\n";
+        }
 
         previewProc.exec({ command: ["bash", "-c", c] });
       }

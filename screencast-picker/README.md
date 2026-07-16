@@ -8,7 +8,7 @@ Interactive screen and window picker for Wayland screencast tooling. Select a mo
 
 - **Screen list** — all connected monitors with resolution subtitles
 - **Window list** — mapped windows (titles, classes) via compositor API
-- **Live thumbnails** — `grim`-based previews on Hyprland (screens and all windows, regardless of occlusion or workspace)
+- **Live thumbnails** — `grim`-based previews on Hyprland (screens and all windows, regardless of occlusion or workspace). Works in XDPH mode too by matching window IDs via (class, title).
 - **IPC driven** — no bar widget or panel; trigger the picker and receive the result via `noctalia-shell ipc`
 
 ## Usage
@@ -48,6 +48,8 @@ The result is either `screen:<name>`, `window:<address>`, or `cancelled`.
 screencast-picker/
 ├── i18n/
 │   └── en.json
+├── scripts/
+│   └── pick.sh
 ├── Main.qml
 └── manifest.json
 ```
@@ -59,6 +61,30 @@ screencast-picker/
 | `showScreensharePicker` | Open the picker overlay |
 
 The picker emits `popupClosed(result)` when the user selects a source or cancels.
+In normal mode the result is `screen:<name>`, `window:<address>`, or `cancelled`.
+
+### XDPH integration
+
+This plugin can replace Hyprland's default share picker when
+`XDPH_WINDOW_SHARING_LIST` is set (automatically detected). Windows are
+populated from the env var instead of `hyprctl`, and the output conforms to
+the `hyprland-share-picker` format (`[SELECTION]/screen:<name>`/`[SELECTION]/window:<id>`).
+
+The bundled wrapper script `scripts/pick.sh` bridges XDPH → IPC → stdout.
+Configure XDPH to use it (adjust the path to your installation):
+
+```ini
+# ~/.config/hypr/xdph.conf
+screencopy {
+  custom_picker_binary = /home/youruser/.config/noctalia/plugins/563115:screencast-picker/scripts/pick.sh
+}
+```
+
+Restart `xdg-desktop-portal-hyprland`:
+
+```sh
+systemctl --user restart xdg-desktop-portal-hyprland
+```
 
 ## License
 
