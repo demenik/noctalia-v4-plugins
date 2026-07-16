@@ -4,6 +4,8 @@ Interactive screen and window picker for Wayland screencast tooling. Select a mo
 
 > This plugin is a **source selector only** — it does not record or stream. Use it with tools like `xdg-desktop-portal`, `wl-screenrec`, `wf-recorder`, `obs-studio`, or your own shell scripts via `noctalia-shell ipc listen`.
 
+![Preview](preview.png)
+
 ## Features
 
 - **Screen list** — all connected monitors with resolution subtitles
