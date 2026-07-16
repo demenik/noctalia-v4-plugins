@@ -5,7 +5,7 @@
   "minNoctaliaVersion": "4.4.1",
   "author": "demenik",
   "license": "MIT",
-  "repository": "https://github.com/noctalia-dev/noctalia-plugins",
+  "repository": "https://github.com/demenik/noctalia-v4-plugins/tree/main/screencast-picker",
   "description": "Interactive screen and window picker; the selected source is emitted as an IPC signal for external screencast tooling.",
   "tags": ["Utility"],
   "entryPoints": {

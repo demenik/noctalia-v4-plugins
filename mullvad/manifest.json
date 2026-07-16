@@ -5,7 +5,7 @@
 	"minNoctaliaVersion": "4.0.0",
 	"author": "OCSPG",
 	"license": "MIT",
-	"repository": "https://github.com/noctalia-dev/noctalia-plugins",
+	"repository": "https://github.com/demenik/noctalia-v4-plugins/tree/main/mullvad",
 	"description": "Control Mullvad VPN from the bar: connect/disconnect, pick relays, toggle lockdown mode, multihop and more.",
 	"tags": [
 		"Bar",
