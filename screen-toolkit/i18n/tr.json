@@ -118,6 +118,8 @@
     "filenameFormat": "Dosya Adı Formatı",
     "filenameFormatDesc": "Oluşturulan dosya adları için şablon. Uzantı otomatik eklenir.",
     "widgetSettings": "Araç Ayarları",
+    "freezeScreen": "Seçim sırasında ekranı dondur",
+    "freezeScreenDesc": "Bölge seçiminden önce tüm ekranı yakalar. Zamanlama sorunlarını önler ve seçim katmanını ekran görüntülerinden gizler.",
     "filenameTokens": {
       "year": "Yıl",
       "month": "Ay",

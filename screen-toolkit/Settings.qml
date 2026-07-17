@@ -18,6 +18,7 @@ ColumnLayout {
     property bool   recordCopyToClipboard:  false
     property int    gifMaxSeconds:          30
     property string searchEngineUrl:        ""
+    property bool   freezeScreen:           true
     property bool   _loaded: false
     property string _previewNow: ""
 
@@ -40,6 +41,7 @@ ColumnLayout {
         recordCopyToClipboard  = pluginApi.pluginSettings.recordCopyToClipboard  ?? false
         gifMaxSeconds          = pluginApi.pluginSettings.gifMaxSeconds          ?? 30
         searchEngineUrl        = pluginApi.pluginSettings.searchEngineUrl        || ""
+        freezeScreen           = pluginApi.pluginSettings.freezeScreen           ?? true
         _loaded = true
     }
 
@@ -58,6 +60,7 @@ ColumnLayout {
         pluginApi.pluginSettings.recordCopyToClipboard  = root.recordCopyToClipboard
         pluginApi.pluginSettings.gifMaxSeconds          = root.gifMaxSeconds
         pluginApi.pluginSettings.searchEngineUrl        = root.searchEngineUrl
+        pluginApi.pluginSettings.freezeScreen           = root.freezeScreen
         pluginApi.saveSettings()
     }
 
@@ -356,6 +359,17 @@ ColumnLayout {
             text:            root.searchEngineUrl
             onTextChanged:   { root.searchEngineUrl = text; saveSettings() }
         }
+    }
+
+    NDivider { Layout.fillWidth: true; Layout.topMargin: Style.marginM; Layout.bottomMargin: Style.marginM }
+
+    // ── Capture ───────────────────────────────────────────────────────────────
+    NToggle {
+        Layout.fillWidth: true
+        label:       pluginApi?.tr("settings.freezeScreen")
+        description: pluginApi?.tr("settings.freezeScreenDesc")
+        checked:     root.freezeScreen
+        onToggled:   (v) => { root.freezeScreen = v; saveSettings() }
     }
 }
 

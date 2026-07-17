@@ -38,7 +38,8 @@
       "detectedRecorder": "",
       "recordSkipConfirmation": false,
       "recordCopyToClipboard": false,
-      "gifMaxSeconds": 30
+      "gifMaxSeconds": 30,
+      "freezeScreen": true
     }
   }
 }

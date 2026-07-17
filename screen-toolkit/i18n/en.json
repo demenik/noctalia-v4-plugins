@@ -191,6 +191,8 @@
     "ocrSection": "OCR",
     "searchEngineUrl": "Search Engine URL",
     "searchEngineUrlDesc": "URL used when searching OCR text. Leave empty to use Google. Examples: https://duckduckgo.com/?q= or https://search.brave.com/search?q=",
+    "freezeScreen": "Freeze screen during selection",
+    "freezeScreenDesc": "Capture the entire screen before region selection. Prevents timing issues and hides the selection overlay from screenshots.",
     "filenameTokens": {
       "year": "Year",
       "month": "Month",

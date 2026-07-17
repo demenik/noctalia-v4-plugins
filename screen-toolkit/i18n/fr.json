@@ -118,6 +118,8 @@
     "filenameFormat": "Format du nom de fichier",
     "filenameFormatDesc": "Modèle pour les noms de fichiers générés. L'extension est ajoutée automatiquement.",
     "widgetSettings": "Paramètres du widget",
+    "freezeScreen": "Figer l'écran lors de la sélection",
+    "freezeScreenDesc": "Capture tout l'écran avant la sélection. Évite les problèmes de synchronisation et masque les guides de sélection sur les captures.",
     "filenameTokens": {
       "year": "Année",
       "month": "Mois",
