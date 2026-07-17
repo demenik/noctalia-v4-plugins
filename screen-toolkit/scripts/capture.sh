@@ -5,6 +5,9 @@
 #   annotate-window          — capture the focused Hyprland window with grim
 #                              output: /tmp/screen-toolkit-annotate.png
 #                              stdout: "X,Y WxH" geometry string
+#   crop      <source> <geometry> <output>
+#                            — crop a pre-captured screenshot
+#                              no stdout on success
 #   pin       <geometry>     — capture a region at 2× scale with grim
 #                              stdout: "/path/to/file.png|WxH"
 #   palette   <geometry>     — extract 8 dominant hex colours from a captured region
@@ -29,6 +32,16 @@ _require() {
 }
 
 case "$ACTION" in
+
+  crop)
+    SOURCE="${2:-}"; GEOMETRY="${3:-}"; OUTPUT="${4:-}"
+    [ -n "$SOURCE"   ] || { echo "ERROR: crop: missing <source>" >&2; exit 1; }
+    [ -n "$GEOMETRY" ] || { echo "ERROR: crop: missing <geometry>" >&2; exit 1; }
+    [ -n "$OUTPUT"   ] || { echo "ERROR: crop: missing <output>" >&2; exit 1; }
+    _require magick
+    magick "$SOURCE" -crop "$GEOMETRY" +repage "$OUTPUT" 2>/dev/null \
+        || { echo "ERROR: crop failed" >&2; exit 2; }
+    ;;
 
   annotate-window)
     _require hyprctl
@@ -89,7 +102,7 @@ case "$ACTION" in
     ;;
 
   *)
-    echo "ERROR: unknown action '${ACTION}'. Expected: annotate-window | pin | palette | qr" >&2
+    echo "ERROR: unknown action '${ACTION}'. Expected: crop | annotate-window | pin | palette | qr" >&2
     exit 1
     ;;
 
