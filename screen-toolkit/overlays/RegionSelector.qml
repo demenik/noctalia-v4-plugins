@@ -13,10 +13,12 @@ Item {
     property var activeScreen: null
     property var windowRegions: []
     property var pluginApi: null
+    property var frozenImages: ({})
     property bool windowRegionsFetched: false
     property bool isNiri: false
     property bool _isNiriChecked: false
-    function show(screen) {
+    function show(screen, frozenImagesMap) {
+        root.frozenImages = frozenImagesMap || ({})
         var target = screen || null
         if (!target && Quickshell.screens.length > 0)
             target = Quickshell.screens[0]
@@ -55,6 +57,7 @@ Item {
     function hide() {
         root.isVisible = false
         root.activeScreen = null
+        root.frozenImages = ({})
     }
     Process {
         id: _envCheckProc
@@ -143,6 +146,18 @@ Item {
                         root.regionSelected(p.x, p.y, p.w, p.h, p.screen)
                     }
                 }
+            }
+            Image {
+                anchors.fill: parent
+                z: -1
+                readonly property string _screenName: win.screen?.name ?? ""
+                readonly property string _fallbackPath: root.frozenImages["all"] ?? ""
+                readonly property string _imgPath: root.frozenImages[_screenName] ?? _fallbackPath
+                visible: _imgPath !== ""
+                source: _imgPath !== "" ? "file://" + _imgPath : ""
+                fillMode: Image.PreserveAspectCrop
+                cache: false
+                asynchronous: true
             }
             function _winAt(px, py) {
                 var regions = root.windowRegions
