@@ -2,6 +2,9 @@
     "window": {
         "title": "Autentisering krevst"
     },
+    "askpass": {
+        "title": "Administratorrettar krevst"
+    },
     "prompt": {
         "password": "Passord"
     },

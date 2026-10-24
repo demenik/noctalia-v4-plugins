@@ -2,6 +2,9 @@
     "window": {
         "title": "Autentisering kreves"
     },
+    "askpass": {
+        "title": "Administratorrettigheter kreves"
+    },
     "prompt": {
         "password": "Passord"
     },

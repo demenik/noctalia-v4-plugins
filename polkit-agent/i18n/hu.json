@@ -2,6 +2,9 @@
     "window": {
         "title": "Hitelesítés szükséges"
     },
+    "askpass": {
+        "title": "Rendszergazdai jogosultság szükséges"
+    },
     "prompt": {
         "password": "Jelszó"
     },

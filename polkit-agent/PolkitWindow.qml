@@ -18,6 +18,35 @@ PanelWindow {
     property string resolvedMessage: ""
     property var transientMatch: null
 
+    // sudo askpass mode: no AuthFlow, the response is handed back via signals
+    property bool askpassMode: false
+    property string askpassPrompt: ""
+    property string askpassCommand: ""
+
+    signal askpassSubmitted(string response)
+    signal askpassCancelled
+
+    readonly property bool responseRequired: askpassMode || (flow !== null && flow.isResponseRequired)
+
+    function submit() {
+        var response = passwordInput.text;
+        passwordInput.text = "";
+        if (askpassMode) {
+            if (response !== "") askpassSubmitted(response);
+        } else if (flow) {
+            flow.submit(response);
+        }
+    }
+
+    function cancel() {
+        passwordInput.text = "";
+        if (askpassMode) {
+            askpassCancelled();
+        } else if (flow) {
+            flow.cancelAuthenticationRequest();
+        }
+    }
+
     Connections {
         target: flow
         function onFailedChanged() {
@@ -32,7 +61,7 @@ PanelWindow {
 
     // Resolve transient service names when flow changes
     onFlowChanged: {
-        resolveTransientServiceName(flow.message);
+        if (flow) resolveTransientServiceName(flow.message);
     }
     
     // Resolve transient service names (run-PID-random.service) to actual command
@@ -94,15 +123,14 @@ PanelWindow {
         focus: true
 
         Keys.onPressed: function(event) {
-            if (!flow) return;
-            
+            if (!flow && !askpassMode) return;
+
             if (Keybinds.checkKey(event, "escape", Settings)) {
-                flow.cancelAuthenticationRequest();
+                polkitWindow.cancel();
                 event.accepted = true;
             } else if (Keybinds.checkKey(event, "enter", Settings)) {
                 if (passwordInput.text !== "") {
-                     flow.submit(passwordInput.text);
-                     passwordInput.text = "";
+                    polkitWindow.submit();
                 }
                 event.accepted = true;
             }
@@ -172,7 +200,7 @@ PanelWindow {
                     spacing: Style.marginXS
 
                     NText {
-                        text: polkitWindow.resolvedMessage || (flow ? flow.message : (pluginApi ? pluginApi.tr("window.title") : "Authentication Required"))
+                        text: askpassMode ? (pluginApi ? pluginApi.tr("askpass.title") : "") : (polkitWindow.resolvedMessage || (flow ? flow.message : (pluginApi ? pluginApi.tr("window.title") : "Authentication Required")))
                         pointSize: Style.fontSizeL
                         font.weight: Style.fontWeightBold
                         color: Color.mOnSurface
@@ -181,7 +209,7 @@ PanelWindow {
                     }
 
                     NText {
-                        text: flow ? flow.actionId : ""
+                        text: askpassMode ? askpassCommand : (flow ? flow.actionId : "")
                         pointSize: Style.fontSizeXS
                         color: Color.mOnSurfaceVariant
                         wrapMode: Text.Wrap
@@ -193,8 +221,8 @@ PanelWindow {
             
             // Supplementary Message (Error or prompt)
             NText {
-                visible: flow && flow.supplementaryMessage !== ""
-                text: flow ? flow.supplementaryMessage : ""
+                visible: text !== ""
+                text: askpassMode ? askpassPrompt.trim() : (flow ? flow.supplementaryMessage : "")
                 pointSize: Style.fontSizeS
                 color: (flow && flow.supplementaryIsError) ? Color.mError : Color.mOnSurfaceVariant
                 wrapMode: Text.Wrap
@@ -205,17 +233,12 @@ PanelWindow {
             NTextInput {
                 id: passwordInput
                 Layout.fillWidth: true
-                placeholderText: flow ? flow.inputPrompt : (pluginApi ? pluginApi.tr("prompt.password") : "Password")
-                label: (flow && flow.isResponseRequired) ? (pluginApi ? pluginApi.tr("prompt.password") : "Password") : ""
-                inputItem.echoMode: (flow && !flow.responseVisible) ? TextInput.Password : TextInput.Normal
-                visible: flow && flow.isResponseRequired
-                
-                onAccepted: {
-                    if (flow) {
-                        flow.submit(passwordInput.text)
-                        passwordInput.text = ""
-                    }
-                }
+                placeholderText: (flow && !askpassMode) ? flow.inputPrompt : (pluginApi ? pluginApi.tr("prompt.password") : "Password")
+                label: polkitWindow.responseRequired ? (pluginApi ? pluginApi.tr("prompt.password") : "Password") : ""
+                inputItem.echoMode: (askpassMode || (flow && !flow.responseVisible)) ? TextInput.Password : TextInput.Normal
+                visible: polkitWindow.responseRequired
+
+                onAccepted: polkitWindow.submit()
             }
 
             // Actions
@@ -231,22 +254,15 @@ PanelWindow {
                     backgroundColor: Color.mSurfaceVariant
                     textColor: Color.mOnSurfaceVariant
                     outlined: false
-                    onClicked: {
-                        if (flow) flow.cancelAuthenticationRequest()
-                    }
+                    onClicked: polkitWindow.cancel()
                 }
 
                 NButton {
                     text: pluginApi ? pluginApi.tr("action.authenticate") : "Authenticate"
                     backgroundColor: Color.mPrimary
                     textColor: Color.mOnPrimary
-                    enabled: flow && flow.isResponseRequired
-                    onClicked: {
-                        if (flow) {
-                            flow.submit(passwordInput.text)
-                            passwordInput.text = ""
-                        }
-                    }
+                    enabled: polkitWindow.responseRequired
+                    onClicked: polkitWindow.submit()
                 }
             }
         }

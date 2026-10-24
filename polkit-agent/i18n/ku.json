@@ -2,6 +2,9 @@
     "window": {
         "title": "Nasname pêwîst e"
     },
+    "askpass": {
+        "title": "Destûra rêveberiyê pêwîst e"
+    },
     "prompt": {
         "password": "Şîfre"
     },

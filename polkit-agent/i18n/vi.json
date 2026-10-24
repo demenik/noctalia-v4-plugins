@@ -2,6 +2,9 @@
   "window": {
     "title": "Yêu cầu xác thực"
   },
+  "askpass": {
+    "title": "Yêu cầu quyền quản trị viên"
+  },
   "prompt": {
     "password": "Mật khẩu"
   },

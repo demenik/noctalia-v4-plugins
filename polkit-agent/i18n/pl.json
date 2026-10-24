@@ -2,6 +2,9 @@
     "window": {
         "title": "Wymagane uwierzytelnienie"
     },
+    "askpass": {
+        "title": "Wymagane uprawnienia administratora"
+    },
     "prompt": {
         "password": "Hasło"
     },

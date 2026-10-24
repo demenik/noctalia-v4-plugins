@@ -2,6 +2,9 @@
     "window": {
         "title": "Autenticação Necessária"
     },
+    "askpass": {
+        "title": "Privilégios de administrador necessários"
+    },
     "prompt": {
         "password": "Senha"
     },

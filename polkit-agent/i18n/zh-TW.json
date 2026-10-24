@@ -2,6 +2,9 @@
     "window": {
         "title": "需要身份驗證"
     },
+    "askpass": {
+        "title": "需要管理員權限"
+    },
     "prompt": {
         "password": "密碼"
     },

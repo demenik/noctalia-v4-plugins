@@ -2,6 +2,9 @@
     "window": {
         "title": "Autenticación requerida"
     },
+    "askpass": {
+        "title": "Se requieren privilegios de administrador"
+    },
     "prompt": {
         "password": "Contraseña"
     },

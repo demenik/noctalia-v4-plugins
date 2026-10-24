@@ -2,6 +2,9 @@
     "window": {
         "title": "Kimlik Doğrulaması Gerekli"
     },
+    "askpass": {
+        "title": "Yönetici yetkileri gerekli"
+    },
     "prompt": {
         "password": "Parola"
     },

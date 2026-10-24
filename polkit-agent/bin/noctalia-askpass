@@ -1,0 +1,53 @@
+#!/bin/sh
+# SUDO_ASKPASS helper that asks for the password through the Noctalia polkit-agent popup.
+# Prints the password on stdout; exits non-zero on cancel, timeout or error.
+
+NOCTALIA_SHELL="${NOCTALIA_SHELL:-noctalia-shell}"
+TIMEOUT="${NOCTALIA_ASKPASS_TIMEOUT:-120}"
+
+prompt="${1:-Password: }"
+
+command -v "$NOCTALIA_SHELL" >/dev/null 2>&1 || {
+  echo "noctalia-askpass: $NOCTALIA_SHELL not found" >&2
+  exit 1
+}
+
+# Best-effort: show the command sudo was asked to run
+cmd=""
+if [ -r "/proc/$PPID/cmdline" ]; then
+  cmd=$(tr '\0' ' ' <"/proc/$PPID/cmdline" | cut -c1-500)
+  cmd="${cmd% }"
+fi
+
+pending=0
+cleanup() {
+  # Close a popup that is still open after a timeout or signal
+  if [ "$pending" = 1 ]; then
+    "$NOCTALIA_SHELL" ipc call plugin:polkit-agent cancelAskpass -- "$fifo" >/dev/null 2>&1
+  fi
+  rm -rf "$dir"
+}
+
+umask 077
+dir=$(mktemp -d "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/noctalia-askpass.XXXXXX") || exit 1
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
+
+fifo="$dir/fifo"
+mkfifo -m 600 "$fifo" || exit 1
+
+# qs ipc always exits 0, so the returned string is the only status
+result=$("$NOCTALIA_SHELL" ipc call plugin:polkit-agent askpass -- "$prompt" "$fifo" "$cmd" 2>/dev/null | tail -n 1)
+if [ "$result" != "ok" ]; then
+  echo "noctalia-askpass: askpass request failed: ${result:-no response}" >&2
+  exit 1
+fi
+pending=1
+
+password=$(timeout "$TIMEOUT" head -n 1 "$fifo")
+status=$?
+# 124: timeout fired, so the popup was never answered
+[ "$status" = 124 ] || pending=0
+[ -n "$password" ] || exit 1
+
+printf '%s\n' "$password"
