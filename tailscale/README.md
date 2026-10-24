@@ -14,7 +14,7 @@ A Tailscale status plugin for Noctalia that shows your Tailscale connection stat
 - **Quick Toggle**: Click to connect/disconnect Tailscale
 - **Peer Context Menu**: Right-click a peer in the panel to copy its IP or FQDN, launch SSH/ping actions, use it as an exit node, or send a file via Taildrop
 - **Node Search**: Optionally filter the panel node list by hostname, DNS name, Tailscale name, IP address, or OS
-- **Taildrop Receive**: Toggle file receiving from the panel
+- **Taildrop Transfers**: Incoming files pop up automatically with Save/Decline, and sends show a live progress and completion card
 - **Exit Node Management**: Activate/deactivate exit nodes from the panel
 - **Account Switching**: When multiple Tailscale accounts are logged in locally, a dropdown appears in the panel to switch between them via `tailscale switch`
 - **Context Menu**: Right-click for additional options (connect, disconnect, refresh, settings)
@@ -39,9 +39,11 @@ Taildrop lets you send and receive files between your Tailscale nodes directly f
 | **Operator (recommended)** | `operator` | Runs `tailscale file get` as your own user — no prompt. Requires a one-time setup (see below). |
 | **pkexec** | `pkexec` | Runs `tailscale file get` via `pkexec` — shows a polkit prompt each time. No setup needed. |
 
-When a receive completes the notification lists each file that appeared in the download directory.
+The plugin watches the Tailscale IPN bus (`tailscale debug watch-ipn`) for Taildrop activity. When another device starts sending you files, a popup appears (placed like Noctalia toasts) showing the transfer progress. Once the transfer finishes you can **Save** the files to the download directory or **Decline** them, which removes them from the Taildrop inbox. Same-named files are saved with a numbered suffix instead of overwriting. Enable `taildropAutoSave` to skip the prompt and save incoming files right away.
 
-To hide both the Receive button and the Send File option entirely, disable Taildrop in plugin settings.
+If you close the popup, a Taildrop button in the panel header lets you reopen it while files are still waiting.
+
+To hide all Taildrop UI, disable Taildrop in plugin settings.
 
 #### One-time operator setup
 
@@ -55,7 +57,7 @@ After that, `tailscale file get` works without root and the plugin can receive f
 
 ### Sending files
 
-Right-click any online peer in the panel and choose **Send File**. A file picker will open; select one or more files and they will be sent via `tailscale file cp`.
+Right-click any online peer in the panel and choose **Send File**. A file picker will open; select one or more files and they will be sent via `tailscale file cp`. A popup shows the upload progress, can cancel the transfer, and confirms when the files have been delivered.
 
 ## Settings
 
@@ -72,9 +74,10 @@ Right-click any online peer in the panel and choose **Send File**. A file picker
 | `sshUsername` | `""` | Username for SSH connections (leave empty for system default) |
 | `pingCount` | `5` | Number of pings to send when pinging a peer |
 | `defaultPeerAction` | `"copy-ip"` | Action when clicking a peer: `copy-ip`, `ssh`, or `ping` |
-| `taildropEnabled` | `true` | Enable Taildrop send/receive. When false, hides the Receive button and Send File option. |
+| `taildropEnabled` | `true` | Enable Taildrop send/receive. When false, hides all Taildrop UI and stops watching for transfers. |
 | `taildropDownloadDir` | `"~/Downloads"` | Directory where received files are saved |
 | `taildropReceiveMode` | `"operator"` | Taildrop receive mode: `operator` or `pkexec` |
+| `taildropAutoSave` | `false` | Save incoming Taildrop files without asking |
 | `loginServer` | `""` | Custom login server URL (e.g. Headscale). Leave empty for default Tailscale. |
 
 ## IPC Commands
@@ -96,7 +99,7 @@ qs -c noctalia-shell ipc call plugin:tailscale <command>
 | `refresh` | Force refresh Tailscale status | `qs -c noctalia-shell ipc call plugin:tailscale refresh` |
 | `login` | Trigger Tailscale login (opens browser) | `qs -c noctalia-shell ipc call plugin:tailscale login` |
 | `switchAccount` | Switch to a Tailscale account by id (see `tailscale switch --list`) | `qs -c noctalia-shell ipc call plugin:tailscale switchAccount a585` |
-| `receive` | Fetch any pending Taildrop files | `qs -c noctalia-shell ipc call plugin:tailscale receive` |
+| `receive` | Save any pending Taildrop files to the download directory | `qs -c noctalia-shell ipc call plugin:tailscale receive` |
 
 ## Usage
 
@@ -104,7 +107,7 @@ qs -c noctalia-shell ipc call plugin:tailscale <command>
 2. **Right-click the bar widget** to open the context menu (connect/disconnect, settings)
 3. **Right-click a peer** in the panel to copy its IP/FQDN, SSH, ping, set as exit node, or send a file
 4. **Search nodes**: if enabled in settings, type in the panel search box to filter by hostname, DNS name, Tailscale name, IP address, or OS
-5. **Receive via Taildrop**: click "Receive via Taildrop" in the panel to fetch any pending incoming files
+5. **Receive via Taildrop**: incoming files pop up automatically; choose Save or Decline
 
 ## Troubleshooting
 

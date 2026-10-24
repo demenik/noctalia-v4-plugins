@@ -39,7 +39,9 @@
     "taildrop-receive-mode-pkexec": "pkexec（每次提示）",
     "authentication": "身份验证",
     "login-server": "登录服务器",
-    "login-server-desc": "自定义登录服务器URL（例如Headscale）。留空使用默认Tailscale服务器。"
+    "login-server-desc": "自定义登录服务器URL（例如Headscale）。留空使用默认Tailscale服务器。",
+    "taildrop-auto-save": "自动保存接收的文件",
+    "taildrop-auto-save-desc": "无需询问即将传入的文件移动到下载目录"
   },
   "actions": {
     "widget-settings": "部件设置"
@@ -104,17 +106,41 @@
       "disable": "禁用出口节点"
     },
     "taildrop": {
-      "receive": "通过Taildrop接收"
+      "files-waiting": "Taildrop 收件箱中有待处理的文件",
+      "show-transfer": "显示 Taildrop 传输"
     }
   },
   "taildrop": {
     "toast": {
       "no-files": "未收到任何文件",
-      "sent": "文件发送成功"
+      "sent": "文件发送成功",
+      "discarded": "已丢弃接收的文件"
     },
     "error": {
       "unknown": "发生意外错误",
       "file-exists": "文件已存在于下载目录中"
+    },
+    "popup": {
+      "receiving": "正在接收文件...",
+      "incoming": "传入的文件",
+      "saving": "正在保存文件...",
+      "discarding": "正在丢弃文件...",
+      "received": "文件已保存",
+      "sending": "正在发送到 {peer}",
+      "sent": "已发送到 {peer}",
+      "failed": "传输失败",
+      "saved-to": "{files} 已保存到 {dir}",
+      "unknown-files": "您的 Taildrop 收件箱中有待处理的文件",
+      "file-count": "{count} 个文件",
+      "file-count-plural": "{count} 个文件",
+      "waiting": "正在等待设备...",
+      "hide": "隐藏",
+      "decline": "拒绝",
+      "save": "保存",
+      "open-folder": "在文件夹中显示",
+      "open": "打开",
+      "cancel": "取消",
+      "done": "完成"
     }
   },
   "file-picker": {

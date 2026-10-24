@@ -39,7 +39,9 @@
     "taildrop-receive-mode-pkexec": "pkexec (xác nhận mỗi lần)",
     "authentication": "Xác thực",
     "login-server": "Máy chủ đăng nhập",
-    "login-server-desc": "URL máy chủ đăng nhập tùy chỉnh (ví dụ: Headscale). Để trống để sử dụng máy chủ Tailscale mặc định."
+    "login-server-desc": "URL máy chủ đăng nhập tùy chỉnh (ví dụ: Headscale). Để trống để sử dụng máy chủ Tailscale mặc định.",
+    "taildrop-auto-save": "Tự động lưu tệp đã nhận",
+    "taildrop-auto-save-desc": "Chuyển tệp đến vào thư mục tải xuống mà không cần hỏi"
   },
   "actions": {
     "widget-settings": "Cài đặt tiện ích"
@@ -104,17 +106,41 @@
       "disable": "Tắt exit node"
     },
     "taildrop": {
-      "receive": "Nhận qua Taildrop"
+      "files-waiting": "Có tệp đang chờ trong hộp thư Taildrop",
+      "show-transfer": "Hiện quá trình truyền Taildrop"
     }
   },
   "taildrop": {
     "toast": {
       "no-files": "Không có tệp nào được nhận",
-      "sent": "Gửi tệp thành công"
+      "sent": "Gửi tệp thành công",
+      "discarded": "Đã hủy các tệp đã nhận"
     },
     "error": {
       "unknown": "Đã xảy ra lỗi không mong muốn",
       "file-exists": "Tệp đã tồn tại trong thư mục tải xuống"
+    },
+    "popup": {
+      "receiving": "Đang nhận tệp...",
+      "incoming": "Tệp đến",
+      "saving": "Đang lưu tệp...",
+      "discarding": "Đang hủy tệp...",
+      "received": "Đã lưu tệp",
+      "sending": "Đang gửi đến {peer}",
+      "sent": "Đã gửi đến {peer}",
+      "failed": "Truyền tệp thất bại",
+      "saved-to": "Đã lưu {files} vào {dir}",
+      "unknown-files": "Có tệp đang chờ trong hộp thư Taildrop của bạn",
+      "file-count": "{count} tệp",
+      "file-count-plural": "{count} tệp",
+      "waiting": "Đang chờ thiết bị...",
+      "hide": "Ẩn",
+      "decline": "Từ chối",
+      "save": "Lưu",
+      "open-folder": "Hiện trong thư mục",
+      "open": "Mở",
+      "cancel": "Hủy",
+      "done": "Xong"
     }
   },
   "file-picker": {

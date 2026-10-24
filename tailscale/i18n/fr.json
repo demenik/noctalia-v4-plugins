@@ -39,7 +39,9 @@
     "taildrop-receive-mode-pkexec": "pkexec (confirmation à chaque fois)",
     "authentication": "Authentification",
     "login-server": "Serveur de connexion",
-    "login-server-desc": "URL du serveur de connexion personnalisé (ex. Headscale). Laisser vide pour le serveur Tailscale par défaut."
+    "login-server-desc": "URL du serveur de connexion personnalisé (ex. Headscale). Laisser vide pour le serveur Tailscale par défaut.",
+    "taildrop-auto-save": "Enregistrer automatiquement les fichiers reçus",
+    "taildrop-auto-save-desc": "Déplacer les fichiers entrants vers le dossier de téléchargement sans demander"
   },
   "actions": {
     "widget-settings": "Paramètres du widget"
@@ -104,17 +106,41 @@
       "disable": "Désactiver le nœud de sortie"
     },
     "taildrop": {
-      "receive": "Recevoir via Taildrop"
+      "files-waiting": "Fichiers en attente dans la boîte Taildrop",
+      "show-transfer": "Afficher le transfert Taildrop"
     }
   },
   "taildrop": {
     "toast": {
       "no-files": "Aucun fichier n'a été reçu",
-      "sent": "Fichiers envoyés avec succès"
+      "sent": "Fichiers envoyés avec succès",
+      "discarded": "Fichiers reçus supprimés"
     },
     "error": {
       "unknown": "Une erreur inattendue s'est produite",
       "file-exists": "Le fichier existe déjà dans le répertoire de téléchargement"
+    },
+    "popup": {
+      "receiving": "Réception des fichiers...",
+      "incoming": "Fichiers entrants",
+      "saving": "Enregistrement des fichiers...",
+      "discarding": "Suppression des fichiers...",
+      "received": "Fichiers enregistrés",
+      "sending": "Envoi vers {peer}",
+      "sent": "Envoyé à {peer}",
+      "failed": "Échec du transfert",
+      "saved-to": "{files} enregistré(s) dans {dir}",
+      "unknown-files": "Des fichiers attendent dans votre boîte Taildrop",
+      "file-count": "{count} fichier",
+      "file-count-plural": "{count} fichiers",
+      "waiting": "En attente de l'appareil...",
+      "hide": "Masquer",
+      "decline": "Refuser",
+      "save": "Enregistrer",
+      "open-folder": "Afficher dans le dossier",
+      "open": "Ouvrir",
+      "cancel": "Annuler",
+      "done": "Terminé"
     }
   },
   "file-picker": {

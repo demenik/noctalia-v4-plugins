@@ -224,6 +224,7 @@ Item {
                 var peer = data.Peer[peerId];
                 var ipv4s = filterIPv4(peer.TailscaleIPs);
                 peers.push({
+                             "ID": peer.ID || "",
                              "HostName": resolveHostName(peer.HostName, peer.DNSName),
                              "DNSName": peer.DNSName,
                              "TailscaleIPs": ipv4s,
@@ -443,10 +444,24 @@ Item {
   }
 
   // ─── Taildrop state ──────────────────────────────────────────────────────
+  // Transfers are tracked through the IPN bus (`tailscale debug watch-ipn`),
+  // which reports progress for incoming (IncomingFiles), finished-but-unclaimed
+  // (FilesWaiting) and outgoing (OutgoingFiles) transfers.
 
-  // Possible values: "idle", "receiving", "sending", "error"
+  // Possible values: "idle", "receiving", "incoming", "saving", "discarding",
+  // "received", "sending", "sent", "error"
   property string taildropState: "idle"
   property string taildropMessage: ""
+  // "in" or "out"
+  property string taildropDirection: ""
+  property string taildropPeerName: ""
+  // [{ name, size, transferred, done }] - size is -1 when unknown
+  property var taildropFiles: []
+  property real taildropTotalBytes: 0
+  property real taildropTransferredBytes: 0
+  property var taildropSavedFiles: []
+  property bool taildropPopupVisible: false
+  property var taildropPopupScreen: null
 
   readonly property string _homeDir: Quickshell.env("HOME") ?? ""
 
@@ -460,7 +475,10 @@ Item {
 
   readonly property bool taildropEnabled: pluginApi?.pluginSettings?.taildropEnabled ?? pluginApi?.manifest?.metadata?.defaultSettings?.taildropEnabled ?? true
 
-  readonly property string taildropDownloadDir: _expandPath(pluginApi?.pluginSettings?.taildropDownloadDir || pluginApi?.manifest?.metadata?.defaultSettings?.taildropDownloadDir || "~/Downloads")
+  readonly property string taildropDownloadDirSetting: pluginApi?.pluginSettings?.taildropDownloadDir || pluginApi?.manifest?.metadata?.defaultSettings?.taildropDownloadDir || "~/Downloads"
+  readonly property string taildropDownloadDir: _expandPath(taildropDownloadDirSetting)
+
+  readonly property bool taildropAutoSave: pluginApi?.pluginSettings?.taildropAutoSave ?? pluginApi?.manifest?.metadata?.defaultSettings?.taildropAutoSave ?? false
 
   // "operator" = no priv-esc (requires `sudo tailscale set --operator $USER`)
   // "pkexec"   = use pkexec to run as root
@@ -468,6 +486,297 @@ Item {
 
   // Snapshot of filenames in download dir taken just before receive starts
   property var _preScanFiles: []
+  // Last FilesWaiting value seen on the IPN bus
+  property bool _filesWaiting: false
+  // Set when the user dismissed or failed to save the current inbox content,
+  // so repeated FilesWaiting notifications do not reopen the popup.
+  property bool _inboxAcknowledged: false
+  property string _sendPeerId: ""
+  property bool _sendCancelled: false
+  // OutgoingFile IDs that belong to earlier sends
+  property var _seenOutgoingIds: ({})
+  property var _staleOutgoingIds: ({})
+
+  function _taildropGetCommand(dir) {
+    var cmd = ["tailscale", "file", "get", "--conflict=rename", dir];
+    return root.taildropReceiveMode === "pkexec" ? ["pkexec"].concat(cmd) : cmd;
+  }
+
+  function _setTaildropFiles(files) {
+    var total = 0;
+    var done = 0;
+    for (var i = 0; i < files.length; i++) {
+      if (files[i].size > 0)
+        total += files[i].size;
+      done += files[i].transferred;
+    }
+    root.taildropFiles = files;
+    root.taildropTotalBytes = total;
+    root.taildropTransferredBytes = done;
+  }
+
+  function _allIncomingDone() {
+    for (var i = 0; i < root.taildropFiles.length; i++) {
+      var f = root.taildropFiles[i];
+      if (!f.done)
+        return false;
+    }
+    return true;
+  }
+
+  function showTaildropPopup() {
+    root.taildropPopupScreen = root.taildropPopupScreen || Quickshell.screens[0] || null;
+    root.taildropPopupVisible = true;
+    if (pluginApi) {
+      pluginApi.withCurrentScreen(screen => {
+                                    root.taildropPopupScreen = screen;
+                                  });
+    }
+  }
+
+  // Hides the popup. Finished transfers are cleared; running ones continue
+  // in the background and the popup reappears when they complete.
+  function dismissTaildropPopup() {
+    root.taildropPopupVisible = false;
+    taildropAutoHideTimer.stop();
+    if (root.taildropState === "incoming") {
+      root._inboxAcknowledged = true;
+    } else if (["received", "sent", "error"].indexOf(root.taildropState) !== -1) {
+      _resetTaildrop();
+    }
+  }
+
+  function _resetTaildrop() {
+    root.taildropState = "idle";
+    root.taildropMessage = "";
+    root.taildropDirection = "";
+    root.taildropPeerName = "";
+    root.taildropSavedFiles = [];
+    _setTaildropFiles([]);
+  }
+
+  function _finishTaildrop(state, message) {
+    root.taildropState = state;
+    root.taildropMessage = message || "";
+    showTaildropPopup();
+    if (state === "received" || state === "sent")
+      taildropAutoHideTimer.restart();
+    else
+      taildropAutoHideTimer.stop();
+  }
+
+  // --- IPN bus watcher ---
+
+  readonly property bool _ipnWatchWanted: root.tailscaleInstalled && root.taildropEnabled
+  on_IpnWatchWantedChanged: _syncIpnWatcher()
+
+  property var _ipnBuffer: []
+
+  function _syncIpnWatcher() {
+    if (root._ipnWatchWanted && !ipnWatchProcess.running) {
+      root._ipnBuffer = [];
+      ipnWatchProcess.running = true;
+    } else if (!root._ipnWatchWanted && ipnWatchProcess.running) {
+      ipnWatchProcess.running = false;
+    }
+  }
+
+  // watch-ipn prints each Notify as tab-indented JSON, so a top-level object
+  // always starts with a lone "{" line and ends with a lone "}" line.
+  function _onIpnLine(line) {
+    if (line === "{") {
+      root._ipnBuffer = [line];
+      return;
+    }
+    if (root._ipnBuffer.length === 0)
+      return;
+    root._ipnBuffer.push(line);
+    if (line !== "}")
+      return;
+    var raw = root._ipnBuffer.join("\n");
+    root._ipnBuffer = [];
+    try {
+      _handleIpnNotify(JSON.parse(raw));
+    } catch (e) {
+      Logger.e("Tailscale", "Failed to parse IPN notification: " + e);
+    }
+  }
+
+  function _handleIpnNotify(n) {
+    if (n.OutgoingFiles)
+      _handleOutgoingFiles(n.OutgoingFiles);
+    if (n.IncomingFiles)
+      _handleIncomingFiles(n.IncomingFiles);
+    _handleFilesWaiting(n.FilesWaiting !== undefined && n.FilesWaiting !== null);
+  }
+
+  function _handleIncomingFiles(list) {
+    if (list.length === 0)
+      return;
+    if (["sending", "saving", "discarding"].indexOf(root.taildropState) !== -1)
+      return;
+
+    var files = [];
+    if (root.taildropState === "receiving") {
+      files = root.taildropFiles.slice();
+    } else {
+      _resetTaildrop();
+      root.taildropState = "receiving";
+      root.taildropDirection = "in";
+      root._inboxAcknowledged = false;
+      taildropAutoHideTimer.stop();
+      showTaildropPopup();
+      Logger.i("Tailscale", "Taildrop incoming transfer detected");
+    }
+
+    for (var i = 0; i < list.length; i++) {
+      var pf = list[i];
+      var entry = {
+        "name": pf.Name,
+        "size": pf.DeclaredSize >= 0 ? pf.DeclaredSize : -1,
+        "transferred": pf.Received || 0,
+        "done": pf.Done === true || (pf.DeclaredSize >= 0 && pf.Received >= pf.DeclaredSize)
+      };
+      var idx = files.findIndex(f => f.name === pf.Name);
+      if (idx === -1)
+        files.push(entry);
+      else
+        files[idx] = entry;
+    }
+    _setTaildropFiles(files);
+
+    taildropSettleTimer.stop();
+    taildropStallTimer.restart();
+  }
+
+  function _handleFilesWaiting(waiting) {
+    root._filesWaiting = waiting;
+    if (waiting) {
+      if (root.taildropState === "receiving") {
+        if (_allIncomingDone())
+          taildropSettleTimer.restart();
+      } else if (["idle", "received", "sent", "error"].indexOf(root.taildropState) !== -1 && !root._inboxAcknowledged) {
+        _resetTaildrop();
+        root.taildropDirection = "in";
+        _enterIncoming();
+      }
+    } else {
+      root._inboxAcknowledged = false;
+      // Inbox was emptied elsewhere (e.g. `tailscale file get` from a terminal)
+      if (root.taildropState === "incoming") {
+        root.taildropPopupVisible = false;
+        _resetTaildrop();
+      }
+    }
+  }
+
+  function _enterIncoming() {
+    taildropStallTimer.stop();
+    taildropSettleTimer.stop();
+    root.taildropState = "incoming";
+    if (root.taildropAutoSave) {
+      saveIncomingFiles();
+    } else {
+      showTaildropPopup();
+    }
+  }
+
+  function _handleOutgoingFiles(list) {
+    var seen = Object.assign({}, root._seenOutgoingIds);
+    for (var i = 0; i < list.length; i++)
+      seen[list[i].ID] = true;
+    root._seenOutgoingIds = seen;
+
+    if (root.taildropState !== "sending")
+      return;
+
+    var files = root.taildropFiles.slice();
+    var changed = false;
+    for (var j = 0; j < list.length; j++) {
+      var of = list[j];
+      if (root._staleOutgoingIds[of.ID])
+        continue;
+      if (root._sendPeerId && of.PeerID && of.PeerID !== root._sendPeerId)
+        continue;
+      var idx = files.findIndex(f => f.name === of.Name);
+      if (idx === -1)
+        continue;
+      files[idx] = {
+        "name": of.Name,
+        "size": of.DeclaredSize >= 0 ? of.DeclaredSize : -1,
+        "transferred": of.Sent || 0
+      };
+      changed = true;
+    }
+    if (changed)
+      _setTaildropFiles(files);
+  }
+
+  Process {
+    id: ipnWatchProcess
+    command: ["tailscale", "debug", "watch-ipn", "--initial-outgoing-files", "--peer-changes=false", "--peer-patches=false"]
+
+    stdout: SplitParser {
+      onRead: data => root._onIpnLine(data)
+    }
+    stderr: StdioCollector {}
+
+    onStarted: Logger.d("Tailscale", "IPN bus watcher started")
+
+    onExited: function (exitCode, exitStatus) {
+      var stderr = String(ipnWatchProcess.stderr.text || "").trim();
+      Logger.d("Tailscale", "IPN bus watcher exited (code " + exitCode + "): " + stderr);
+      if (root._ipnWatchWanted)
+        ipnWatchRestartTimer.restart();
+    }
+  }
+
+  Timer {
+    id: ipnWatchRestartTimer
+    interval: 5000
+    repeat: false
+    onTriggered: root._syncIpnWatcher()
+  }
+
+  // Multi-file sends arrive one after another, so wait briefly after the
+  // last file completes before treating the batch as finished.
+  Timer {
+    id: taildropSettleTimer
+    interval: 1500
+    repeat: false
+    onTriggered: {
+      if (root.taildropState === "receiving")
+        root._enterIncoming();
+    }
+  }
+
+  // The bus does not report aborted incoming transfers; give up on a
+  // receive that has not progressed for a while.
+  Timer {
+    id: taildropStallTimer
+    interval: 30000
+    repeat: false
+    onTriggered: {
+      if (root.taildropState !== "receiving")
+        return;
+      Logger.w("Tailscale", "Taildrop incoming transfer stalled");
+      if (root._filesWaiting) {
+        root._enterIncoming();
+      } else {
+        root.taildropPopupVisible = false;
+        root._resetTaildrop();
+      }
+    }
+  }
+
+  Timer {
+    id: taildropAutoHideTimer
+    interval: 8000
+    repeat: false
+    onTriggered: root.dismissTaildropPopup()
+  }
+
+  // --- Taildrop actions ---
 
   Process {
     id: preScanProcess
@@ -482,13 +791,7 @@ Item {
         root._preScanFiles = [];
       }
       Logger.d("Tailscale", "Pre-scan: " + root._preScanFiles.length + " files");
-      // Now start the actual receive
-      var dir = root.taildropDownloadDir;
-      if (root.taildropReceiveMode === "pkexec") {
-        taildropReceiveProcess.command = ["pkexec", "tailscale", "file", "get", dir];
-      } else {
-        taildropReceiveProcess.command = ["tailscale", "file", "get", dir];
-      }
+      taildropReceiveProcess.command = root._taildropGetCommand(root.taildropDownloadDir);
       taildropReceiveProcess.running = true;
     }
   }
@@ -515,9 +818,11 @@ Item {
       }
       Logger.i("Tailscale", "Taildrop received " + newFiles.length + " new file(s)");
       if (newFiles.length > 0) {
-        ToastService.showNotice(pluginApi?.tr("toast.title"), newFiles.join("\n"), "file-download");
+        root.taildropSavedFiles = newFiles;
+        root._finishTaildrop("received");
       } else {
-        ToastService.showWarning(pluginApi?.tr("toast.title"), pluginApi?.tr("taildrop.toast.no-files"));
+        root._inboxAcknowledged = true;
+        root._finishTaildrop("error", pluginApi?.tr("taildrop.toast.no-files"));
       }
     }
   }
@@ -528,7 +833,7 @@ Item {
     stderr: StdioCollector {}
 
     onStarted: {
-      root.taildropState = "receiving";
+      root.taildropState = "saving";
       root.taildropMessage = "";
       Logger.i("Tailscale", "Taildrop receive started in: " + root.taildropDownloadDir);
     }
@@ -538,18 +843,34 @@ Item {
       var stdout = String(taildropReceiveProcess.stdout.text || "").trim();
       var allOutput = (stderr + "\n" + stdout).trim();
       if (exitCode === 0) {
-        root.taildropState = "idle";
-        root.taildropMessage = "";
-        // Scan post-receive to diff new files
         postScanProcess.command = ["ls", "-1", root.taildropDownloadDir];
         postScanProcess.running = true;
         Logger.i("Tailscale", "Taildrop receive completed, running post-scan");
       } else {
-        root.taildropState = "error";
+        root._inboxAcknowledged = true;
         var isDuplicateFile = allOutput.indexOf("file exists") !== -1 || allOutput.indexOf("refusing to overwrite") !== -1 || /moved 0\/\d+ files/.test(allOutput);
-        root.taildropMessage = isDuplicateFile ? pluginApi?.tr("taildrop.error.file-exists") : allOutput || pluginApi?.tr("taildrop.error.unknown");
-        ToastService.showError(pluginApi?.tr("toast.title"), root.taildropMessage, "file-x");
+        root._finishTaildrop("error", isDuplicateFile ? pluginApi?.tr("taildrop.error.file-exists") : allOutput || pluginApi?.tr("taildrop.error.unknown"));
         Logger.e("Tailscale", "Taildrop receive failed (exit " + exitCode + "): " + allOutput);
+      }
+    }
+  }
+
+  Process {
+    id: taildropDiscardProcess
+    stdout: StdioCollector {}
+    stderr: StdioCollector {}
+
+    onExited: function (exitCode, exitStatus) {
+      var stderr = String(taildropDiscardProcess.stderr.text || "").trim();
+      if (exitCode === 0) {
+        root.taildropPopupVisible = false;
+        root._resetTaildrop();
+        ToastService.showNotice(pluginApi?.tr("toast.title"), pluginApi?.tr("taildrop.toast.discarded"), "trash");
+        Logger.i("Tailscale", "Taildrop inbox discarded");
+      } else {
+        root._inboxAcknowledged = true;
+        root._finishTaildrop("error", stderr || pluginApi?.tr("taildrop.error.unknown"));
+        Logger.e("Tailscale", "Taildrop discard failed (exit " + exitCode + "): " + stderr);
       }
     }
   }
@@ -560,47 +881,66 @@ Item {
     stderr: StdioCollector {}
 
     onStarted: {
-      root.taildropState = "sending";
-      root.taildropMessage = "";
       Logger.i("Tailscale", "Taildrop send started");
     }
 
     onExited: function (exitCode, exitStatus) {
       var stderr = String(taildropSendProcess.stderr.text || "").trim();
-      if (exitCode === 0) {
-        root.taildropState = "idle";
-        root.taildropMessage = "";
-        ToastService.showNotice(pluginApi?.tr("toast.title"), pluginApi?.tr("taildrop.toast.sent"), "file-upload");
+      if (root._sendCancelled) {
+        root._sendCancelled = false;
+        root.taildropPopupVisible = false;
+        root._resetTaildrop();
+        Logger.i("Tailscale", "Taildrop send cancelled");
+      } else if (exitCode === 0) {
+        root._setTaildropFiles(root.taildropFiles.map(f => ({
+                                                              "name": f.name,
+                                                              "size": f.size,
+                                                              "transferred": Math.max(f.size, f.transferred)
+                                                            })));
+        root._finishTaildrop("sent");
         Logger.i("Tailscale", "Taildrop send completed successfully");
       } else {
-        root.taildropState = "error";
-        root.taildropMessage = stderr || pluginApi?.tr("taildrop.error.unknown");
-        ToastService.showError(pluginApi?.tr("toast.title"), root.taildropMessage, "file-x");
-        Logger.e("Tailscale", "Taildrop send failed (exit " + exitCode + "): " + root.taildropMessage);
+        root._finishTaildrop("error", stderr || pluginApi?.tr("taildrop.error.unknown"));
+        Logger.e("Tailscale", "Taildrop send failed (exit " + exitCode + "): " + stderr);
       }
     }
   }
 
-  function startTaildropReceive() {
-    if (!root.tailscaleInstalled || !root.tailscaleRunning) {
-      Logger.w("Tailscale", "Cannot start receive: tailscale not running");
+  // Moves all files from the Taildrop inbox into the download directory.
+  function saveIncomingFiles() {
+    if (!root.tailscaleInstalled) {
+      Logger.w("Tailscale", "Cannot receive: tailscale not installed");
       return;
     }
     if (!root.taildropEnabled) {
       Logger.w("Tailscale", "Taildrop is disabled in settings");
       return;
     }
-    if (root.taildropState === "receiving") {
-      Logger.w("Tailscale", "Already receiving");
+    if (preScanProcess.running || taildropReceiveProcess.running || taildropDiscardProcess.running) {
+      Logger.w("Tailscale", "Already handling the Taildrop inbox");
       return;
     }
+    root.taildropDirection = "in";
+    root.taildropState = "saving";
     // Pre-scan the download dir; the scan's onExited launches the actual receive
     preScanProcess.command = ["ls", "-1", root.taildropDownloadDir];
     preScanProcess.running = true;
   }
 
-  // files: array of local file paths, peerTarget: "hostname:" or "ip:"
-  function sendFilesViaTaildrop(files, peerTarget) {
+  // Deletes all files from the Taildrop inbox. There is no CLI command for
+  // this, so the files are fetched into a throwaway directory instead.
+  function discardIncomingFiles() {
+    if (!root.tailscaleInstalled || taildropReceiveProcess.running || taildropDiscardProcess.running)
+      return;
+    root.taildropState = "discarding";
+    var script = 'd=$(mktemp -d) || exit 1; "$@" "$d"; r=$?; rm -rf "$d"; exit $r';
+    taildropDiscardProcess.command = ["sh", "-c", script, "sh"].concat(root._taildropGetCommand("").slice(0, -1));
+    taildropDiscardProcess.running = true;
+  }
+
+  // files: array of local file paths, peerTarget: "hostname:" or "ip:",
+  // peer: peer object from peerList (used for progress tracking and display)
+  function sendFilesViaTaildrop(files, peerTarget, peer) {
     if (!root.tailscaleInstalled || !root.tailscaleRunning) {
       Logger.w("Tailscale", "Cannot send: tailscale not running");
       return;
@@ -613,17 +953,52 @@ Item {
       Logger.w("Tailscale", "No files to send");
       return;
     }
-    if (root.taildropState === "sending") {
+    if (taildropSendProcess.running) {
       Logger.w("Tailscale", "Already sending files");
       return;
     }
-    var cmd = ["tailscale", "file", "cp"];
-    for (var i = 0; i < files.length; i++) {
-      cmd.push(files[i]);
-    }
-    cmd.push(peerTarget);
-    taildropSendProcess.command = cmd;
+
+    _resetTaildrop();
+    taildropAutoHideTimer.stop();
+    root.taildropState = "sending";
+    root.taildropDirection = "out";
+    root.taildropPeerName = peer?.HostName || peerTarget.replace(/:$/, "");
+    root._sendPeerId = peer?.ID || "";
+    root._sendCancelled = false;
+    root._staleOutgoingIds = Object.assign({}, root._seenOutgoingIds);
+    _setTaildropFiles(files.map(p => ({
+                                        "name": p.split("/").pop(),
+                                        "size": -1,
+                                        "transferred": 0
+                                      })));
+    showTaildropPopup();
+
+    taildropSendProcess.command = ["tailscale", "file", "cp"].concat(files).concat([peerTarget]);
     taildropSendProcess.running = true;
+  }
+
+  function cancelTaildropSend() {
+    if (!taildropSendProcess.running)
+      return;
+    root._sendCancelled = true;
+    taildropSendProcess.running = false;
+  }
+
+  function openTaildropDownloadDir() {
+    Qt.openUrlExternally("file://" + root.taildropDownloadDir);
+  }
+
+  function openTaildropSavedFile(name) {
+    Qt.openUrlExternally("file://" + root.taildropDownloadDir + "/" + name);
+  }
+
+  Loader {
+    active: root.taildropPopupVisible && root.taildropPopupScreen !== null
+    sourceComponent: TaildropPopup {
+      screen: root.taildropPopupScreen
+      mainInstance: root
+      pluginApi: root.pluginApi
+    }
   }
 
   function setExitNode(ip) {
@@ -807,7 +1182,7 @@ Item {
 
     // Taildrop IPC: qs ipc call plugin:tailscale receive
     function receive() {
-      startTaildropReceive();
+      saveIncomingFiles();
     }
 
     // Dev/testing: toggle mock peer list to reproduce few-device layouts.

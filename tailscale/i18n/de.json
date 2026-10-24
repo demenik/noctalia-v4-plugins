@@ -39,7 +39,9 @@
     "taildrop-receive-mode-pkexec": "pkexec (jedes Mal Eingabeaufforderung)",
     "authentication": "Authentifizierung",
     "login-server": "Anmeldeserver",
-    "login-server-desc": "Benutzerdefinierte Anmeldeserver-URL (z. B. Headscale). Leer lassen für den Standard-Tailscale-Server."
+    "login-server-desc": "Benutzerdefinierte Anmeldeserver-URL (z. B. Headscale). Leer lassen für den Standard-Tailscale-Server.",
+    "taildrop-auto-save": "Empfangene Dateien automatisch speichern",
+    "taildrop-auto-save-desc": "Eingehende Dateien ohne Nachfrage in das Download-Verzeichnis verschieben"
   },
   "actions": {
     "widget-settings": "Widget Einstellungen"
@@ -104,17 +106,41 @@
       "disable": "Ausgangsknoten deaktivieren"
     },
     "taildrop": {
-      "receive": "Über Taildrop empfangen"
+      "files-waiting": "Dateien im Taildrop-Eingang",
+      "show-transfer": "Taildrop-Übertragung anzeigen"
     }
   },
   "taildrop": {
     "toast": {
       "no-files": "Es wurden keine Dateien empfangen",
-      "sent": "Dateien erfolgreich gesendet"
+      "sent": "Dateien erfolgreich gesendet",
+      "discarded": "Empfangene Dateien verworfen"
     },
     "error": {
       "unknown": "Ein unerwarteter Fehler ist aufgetreten",
       "file-exists": "Datei existiert bereits im Download-Verzeichnis"
+    },
+    "popup": {
+      "receiving": "Dateien werden empfangen...",
+      "incoming": "Eingehende Dateien",
+      "saving": "Dateien werden gespeichert...",
+      "discarding": "Dateien werden verworfen...",
+      "received": "Dateien gespeichert",
+      "sending": "Senden an {peer}",
+      "sent": "An {peer} gesendet",
+      "failed": "Übertragung fehlgeschlagen",
+      "saved-to": "{files} gespeichert in {dir}",
+      "unknown-files": "Im Taildrop-Eingang warten Dateien",
+      "file-count": "{count} Datei",
+      "file-count-plural": "{count} Dateien",
+      "waiting": "Warte auf Gerät...",
+      "hide": "Ausblenden",
+      "decline": "Ablehnen",
+      "save": "Speichern",
+      "open-folder": "Im Ordner anzeigen",
+      "open": "Öffnen",
+      "cancel": "Abbrechen",
+      "done": "Fertig"
     }
   },
   "file-picker": {

@@ -75,6 +75,11 @@ ColumnLayout {
     pluginApi?.manifest?.metadata?.defaultSettings?.taildropDownloadDir ||
     "~/Downloads"
 
+  property bool editTaildropAutoSave:
+    pluginApi?.pluginSettings?.taildropAutoSave ??
+    pluginApi?.manifest?.metadata?.defaultSettings?.taildropAutoSave ??
+    false
+
   property string editTaildropReceiveMode:
     pluginApi?.pluginSettings?.taildropReceiveMode ||
     pluginApi?.manifest?.metadata?.defaultSettings?.taildropReceiveMode ||
@@ -322,6 +327,15 @@ ColumnLayout {
     onTextChanged: root.editTaildropDownloadDir = text
   }
 
+  NToggle {
+    Layout.fillWidth: true
+    enabled: root.editTaildropEnabled
+    label: pluginApi?.tr("settings.taildrop-auto-save")
+    description: pluginApi?.tr("settings.taildrop-auto-save-desc")
+    checked: root.editTaildropAutoSave
+    onToggled: checked => root.editTaildropAutoSave = checked
+  }
+
   NComboBox {
     Layout.fillWidth: true
     enabled: root.editTaildropEnabled
@@ -356,6 +370,7 @@ ColumnLayout {
     pluginApi.pluginSettings.taildropEnabled = root.editTaildropEnabled
     pluginApi.pluginSettings.taildropDownloadDir = root.editTaildropDownloadDir
     pluginApi.pluginSettings.taildropReceiveMode = root.editTaildropReceiveMode
+    pluginApi.pluginSettings.taildropAutoSave = root.editTaildropAutoSave
     pluginApi.pluginSettings.loginServer = root.editLoginServer
 
     pluginApi.saveSettings()

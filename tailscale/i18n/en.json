@@ -39,7 +39,9 @@
     "taildrop-receive-mode-pkexec": "pkexec (prompt each time)",
     "authentication": "Authentication",
     "login-server": "Login Server",
-    "login-server-desc": "Custom login server URL (e.g. Headscale). Leave empty for default Tailscale server."
+    "login-server-desc": "Custom login server URL (e.g. Headscale). Leave empty for default Tailscale server.",
+    "taildrop-auto-save": "Save Received Files Automatically",
+    "taildrop-auto-save-desc": "Move incoming files to the download directory without asking"
   },
   "actions": {
     "widget-settings": "Widget Settings"
@@ -104,20 +106,44 @@
       "disable": "Disable Exit Node"
     },
     "taildrop": {
-      "receive": "Receive via Taildrop"
+      "files-waiting": "Files waiting in Taildrop inbox",
+      "show-transfer": "Show Taildrop transfer"
     }
   },
   "taildrop": {
     "toast": {
       "no-files": "No files were received",
-      "sent": "Files sent successfully"
+      "sent": "Files sent successfully",
+      "discarded": "Received files discarded"
     },
     "error": {
       "unknown": "An unexpected error occurred",
       "file-exists": "File already exists in the download directory"
+    },
+    "popup": {
+      "receiving": "Receiving files...",
+      "incoming": "Incoming files",
+      "saving": "Saving files...",
+      "discarding": "Discarding files...",
+      "received": "Files saved",
+      "sending": "Sending to {peer}",
+      "sent": "Sent to {peer}",
+      "failed": "Transfer failed",
+      "saved-to": "{files} saved to {dir}",
+      "unknown-files": "Files are waiting in your Taildrop inbox",
+      "file-count": "{count} file",
+      "file-count-plural": "{count} files",
+      "waiting": "Waiting for device...",
+      "hide": "Hide",
+      "decline": "Decline",
+      "save": "Save",
+      "open-folder": "Show in folder",
+      "open": "Open",
+      "cancel": "Cancel",
+      "done": "Done"
     }
   },
   "file-picker": {
     "title": "Select file to send via Taildrop"
-  }  
+  }
 }

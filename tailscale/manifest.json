@@ -1,7 +1,7 @@
 {
   "id": "tailscale",
   "name": "Tailscale",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "minNoctaliaVersion": "4.0.0",
   "author": "nineluj",
   "license": "MIT",
@@ -37,6 +37,7 @@
       "taildropEnabled": true,
       "taildropDownloadDir": "~/Downloads",
       "taildropReceiveMode": "operator",
+      "taildropAutoSave": false,
       "loginServer": ""
     }
   }

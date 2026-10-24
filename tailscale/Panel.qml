@@ -37,7 +37,8 @@ Item {
       // Use Tailscale DNS name (not system HostName) to avoid LAN DNS resolution
       var tsName = mainInstance.tailscaleName(root.sendTargetPeer.DNSName)
       var target = (tsName || root.sendTargetPeer.TailscaleIPs[0]) + ":"
-      mainInstance.sendFilesViaTaildrop(paths, target)
+      mainInstance.sendFilesViaTaildrop(paths, target, root.sendTargetPeer)
+      if (pluginApi) pluginApi.closePanel(pluginApi.panelOpenScreen)
     }
   }
 
@@ -437,15 +438,20 @@ Item {
             Layout.fillWidth: true
           }
 
-          // Taildrop receive
+          // Reopen a hidden Taildrop transfer popup
           NIconButton {
-            icon: "file-download"
-            tooltipText: pluginApi?.tr("panel.taildrop.receive")
+            icon: mainInstance?.taildropDirection === "out" ? "file-upload" : "file-download"
+            tooltipText: mainInstance?.taildropState === "incoming"
+              ? pluginApi?.tr("panel.taildrop.files-waiting")
+              : pluginApi?.tr("panel.taildrop.show-transfer")
             baseSize: Style.baseWidgetSize * 0.8
-            visible: (mainInstance?.tailscaleRunning ?? false) && (mainInstance?.taildropEnabled ?? true)
+            colorFg: Color.mPrimary
+            visible: (mainInstance?.taildropEnabled ?? true)
+              && (mainInstance?.taildropState ?? "idle") !== "idle"
+              && !(mainInstance?.taildropPopupVisible ?? false)
             onClicked: {
               if (mainInstance) {
-                mainInstance.startTaildropReceive()
+                mainInstance.showTaildropPopup()
                 if (pluginApi) pluginApi.closePanel(pluginApi.panelOpenScreen)
               }
             }
